@@ -999,7 +999,20 @@
     "@babel/parser" "^7.27.2"
     "@babel/types" "^7.27.1"
 
-"@babel/traverse--for-generate-function-map@npm:@babel/traverse@^7.25.3", "@babel/traverse@^7.25.3", "@babel/traverse@^7.27.1", "@babel/traverse@^7.27.3", "@babel/traverse@^7.28.0":
+"@babel/traverse--for-generate-function-map@npm:@babel/traverse@^7.25.3":
+  version "7.28.0"
+  resolved "https://registry.yarnpkg.com/@babel/traverse/-/traverse-7.28.0.tgz#518aa113359b062042379e333db18380b537e34b"
+  integrity sha512-mGe7UK5wWyh0bKRfupsUchrQGqvDbZDbKJw+kcRGSmdHVYrv+ltd0pnpDTVpiTqnaBru9iEvA8pz8W46v0Amwg==
+  dependencies:
+    "@babel/code-frame" "^7.27.1"
+    "@babel/generator" "^7.28.0"
+    "@babel/helper-globals" "^7.28.0"
+    "@babel/parser" "^7.28.0"
+    "@babel/template" "^7.27.2"
+    "@babel/types" "^7.28.0"
+    debug "^4.3.1"
+
+"@babel/traverse@^7.25.3", "@babel/traverse@^7.27.1", "@babel/traverse@^7.27.3", "@babel/traverse@^7.28.0":
   version "7.28.0"
   resolved "https://registry.yarnpkg.com/@babel/traverse/-/traverse-7.28.0.tgz#518aa113359b062042379e333db18380b537e34b"
   integrity sha512-mGe7UK5wWyh0bKRfupsUchrQGqvDbZDbKJw+kcRGSmdHVYrv+ltd0pnpDTVpiTqnaBru9iEvA8pz8W46v0Amwg==
@@ -5633,6 +5646,11 @@ react-native-maps@^1.24.3:
   integrity sha512-Gbx1K1+urx1cBT7tew2Xi4pd/hpKdzCZTg2ayeLj9e86Yt/sc8olEHaDOTg2klNuu9uf3qDXc98aml1mYbzy9g==
   dependencies:
     "@types/geojson" "^7946.0.13"
+
+react-native-pager-view@^6.9.1:
+  version "6.9.1"
+  resolved "https://registry.yarnpkg.com/react-native-pager-view/-/react-native-pager-view-6.9.1.tgz#a9e6d9323935cc2ae1d46d7816b66f76dc3eff8e"
+  integrity sha512-uUT0MMMbNtoSbxe9pRvdJJKEi9snjuJ3fXlZhG8F2vVMOBJVt/AFtqMPUHu9yMflmqOr08PewKzj9EPl/Yj+Gw==
 
 react-native-reanimated@^3.18.0:
   version "3.19.0"
