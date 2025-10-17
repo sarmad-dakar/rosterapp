@@ -16,6 +16,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { styles } from './styles';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { vh } from '../../utils/units';
 
 type Props = {
   reference?: React.RefObject<TextInput>;
@@ -25,9 +27,10 @@ type Props = {
   error?: string;
   inputStyle?: StyleProp<ViewStyle> | undefined;
   style?: StyleProp<ViewStyle> | undefined;
+  dropdown: boolean;
 } & TextInputProps;
 
-const InputField: FC<Props> = props => {
+const InputDropdown: FC<Props> = props => {
   const [showPassword, setShowPassword] = useState(
     props.secureTextEntry || false,
   );
@@ -126,28 +129,15 @@ const InputField: FC<Props> = props => {
               />
             </View>
           )}
-          <TextInput
-            onFocus={tintColorAnimation}
-            onBlur={handleBlur}
-            ref={props.reference ?? inputRef}
-            style={styles.input}
-            placeholderTextColor={displayError ? 'red' : '#696969ff'}
-            // allowFontScaling={false}
-            value={inputValue}
-            onChangeText={handleChangeText}
-            secureTextEntry={showPassword}
-            {...props}
-          />
+
+          <Text style={{ color: '#444444ff', fontSize: vh * 1.32 }}>
+            {props.value || props.placeholder}
+          </Text>
         </Pressable>
 
-        {props.rightIcon && (
-          <View style={styles.rightContainer}>
-            <Image
-              source={props.rightIcon}
-              style={[styles.rightIcon, displayError && { tintColor: 'red' }]}
-            />
-          </View>
-        )}
+        <View style={styles.rightContainer}>
+          <FontAwesome name="list-alt" color="#444444ff" size={18} />
+        </View>
       </Animated.View>
 
       {displayError && <Text style={styles.error}>{displayError}</Text>}
@@ -155,4 +145,4 @@ const InputField: FC<Props> = props => {
   );
 };
 
-export default InputField;
+export default InputDropdown;
