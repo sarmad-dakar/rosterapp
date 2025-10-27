@@ -4,12 +4,16 @@ import InputField from '../components/InputField';
 import PagerTabs from '../components/PagerTabs';
 import { dynamicJson } from '../utils/dummyJson';
 import MyCustomButton from '../components/button';
+import PopupWrapper from '../components/PopupWrapper';
+import TableViewModal from '../components/TableViewModal';
 
 const ComponentName = () => {
   const styles = MyStyles();
   const [tabs, setTabs] = useState([]);
   const [tabForm, setTabForm] = useState([]);
   const [generalForm, setGeneralForm] = useState([]);
+  const [tableData, setTableData] = useState([]);
+  const popupRef = React.useRef<any>(null);
 
   useEffect(() => {
     sortJson();
@@ -39,7 +43,15 @@ const ComponentName = () => {
       console.log(generalFields, 'generalFields');
       setTabs(sortedTabs);
       console.log(tabArray, 'sortedTabs');
+      console.log(response.pageTableModals, 'Modals');
       setTabForm(tabArray);
+    }
+  };
+
+  const handlePopupPress = fieldData => {
+    if (popupRef && popupRef.current) {
+      popupRef.current.show();
+      setTableData(fieldData);
     }
   };
 
@@ -54,11 +66,19 @@ const ComponentName = () => {
                 key={item.fieldID}
                 label={item.displayName}
                 placeholder={item.placeholder}
+                value={item.defaultValue}
               />
             );
           }
         })}
-        <PagerTabs tabs={tabs} tabForm={tabForm} />
+        <PagerTabs
+          handlePopupPress={handlePopupPress}
+          tabs={tabs}
+          tabForm={tabForm}
+        />
+        <PopupWrapper ref={popupRef}>
+          <TableViewModal tableData={tableData} />
+        </PopupWrapper>
         {/* <InputField label="Username" placeholder="Enter your username" /> */}
       </ScrollView>
     </View>

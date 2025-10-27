@@ -4,8 +4,9 @@ import PagerView from 'react-native-pager-view';
 import InputField from '../InputField';
 import { vw } from '../../utils/units';
 import InputDropdown from '../InputDropdown';
+import CheckboxComponent from '../Checkbox';
 
-const PagerTabs = ({ tabs, tabForm }) => {
+const PagerTabs = ({ tabs, tabForm, handlePopupPress }) => {
   const [activeTab, setActiveTab] = useState(0);
   const pagerRef = useRef(null);
 
@@ -65,6 +66,32 @@ const PagerTabs = ({ tabs, tabForm }) => {
                     label={field.displayName}
                     placeholder={field.placeholder}
                     inputStyle={{ width: vw * 42 }}
+                    dropdownData={field.fieldData}
+                    value={field.defaultValue}
+                  />
+                );
+              }
+              if (
+                field.fieldType === 'modal' ||
+                field.fieldType === 'modalinput'
+              ) {
+                return (
+                  <InputDropdown
+                    key={fieldIndex}
+                    label={field.displayName}
+                    placeholder={field.placeholder}
+                    inputStyle={{ width: vw * 42 }}
+                    defaultValue={field.defaultValue}
+                    ismodal={true}
+                    onPress={() => handlePopupPress(field.fieldData)}
+                  />
+                );
+              }
+              if (field.fieldType === 'checkbox') {
+                return (
+                  <CheckboxComponent
+                    key={fieldIndex}
+                    label={field.displayName}
                   />
                 );
               } else {

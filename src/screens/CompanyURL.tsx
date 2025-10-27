@@ -12,11 +12,12 @@ import {
   ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { verifyDomain } from '../api/auth';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ModernLoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
+  const [domain, setDomain] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
@@ -67,7 +68,8 @@ export default function ModernLoginScreen({ navigation }) {
     }).start();
   };
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
+    console.log('initiated');
     Animated.sequence([
       Animated.timing(buttonScale, {
         toValue: 0.95,
@@ -81,8 +83,11 @@ export default function ModernLoginScreen({ navigation }) {
       }),
     ]).start();
     // Add your login logic here
-    console.log('Login:', { email, password });
-    navigation.navigate('loginScreen');
+    let object = {
+      domain: domain,
+    };
+    const response = await verifyDomain(object);
+    console.log('Domain verification response:', response);
   };
 
   return (
@@ -130,11 +135,11 @@ export default function ModernLoginScreen({ navigation }) {
                   </View>
                   <TextInput
                     style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
+                    value={domain}
+                    onChangeText={setDomain}
                     onFocus={handleEmailFocus}
                     onBlur={handleEmailBlur}
-                    placeholder="Enter your email"
+                    placeholder="Enter your domain"
                     placeholderTextColor="#9CA3AF"
                     keyboardType="email-address"
                     autoCapitalize="none"
