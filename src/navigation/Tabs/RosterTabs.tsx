@@ -10,8 +10,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
 import RosterDetailViewV2 from '../../screens/RoasterDetailViewV2';
-import ModernLoginScreen from '../../screens/CompanyURL';
-import LoginScreen from '../../screens/LoginScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -19,9 +17,6 @@ const Stack = createNativeStackNavigator();
 const RosterStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="companyURL" component={ModernLoginScreen} />
-      <Stack.Screen name="loginScreen" component={LoginScreen} />
-
       <Stack.Screen name="rosterView" component={RosterView} />
       <Stack.Screen name="rosterDetailView" component={RosterDetailViewV2} />
       {/* Add other screens here if needed */}

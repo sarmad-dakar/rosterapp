@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -306,11 +306,58 @@ const scheduleData = {
   ],
 };
 
-const RosterDetailViewV2 = () => {
+const RosterDetailViewV2 = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState(22);
   const [expandedGroups, setExpandedGroups] = useState({});
   const employeeInfoRef = React.useRef(null);
 
+  const [scheduleTesting, setScheduleTesting] = useState();
+  const employeeData = route?.params?.employeeData;
+  console.log(employeeData, 'employeeData');
+  useEffect(() => {
+    sortJson(employeeData);
+  }, [employeeData]);
+
+  const sortJson = data => {
+    let dummyWeekdays = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ];
+    let basicObject = {
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: [],
+    };
+
+    dummyWeekdays.forEach(day => {
+      data.forEach(employee => {
+        let employeeObject = {
+          employee: employee,
+          shifts: [
+            {
+              timeIn: '2:00pm',
+              timeOut: '10:00pm',
+              breakTime: '45m',
+              status: 'PENDING',
+              role: 'Night Shift',
+            },
+          ],
+        };
+        basicObject[day].push(employeeObject);
+      });
+    });
+
+    console.log('Sorted Data:', basicObject);
+  };
   const handleEmployeePress = employee => {
     employeeInfoRef.current?.show(employee);
   };

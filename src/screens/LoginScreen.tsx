@@ -10,17 +10,25 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-
+import { icons } from '../assets';
+import { verifyLogin } from '../api/auth';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/authSlice';
 const { width, height } = Dimensions.get('window');
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, route }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const domain = route.params?.domain || '';
 
   const emailScale = useRef(new Animated.Value(1)).current;
   const passwordScale = useRef(new Animated.Value(1)).current;
@@ -67,7 +75,7 @@ export default function LoginScreen({ navigation }) {
     }).start();
   };
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
     Animated.sequence([
       Animated.timing(buttonScale, {
         toValue: 0.95,
@@ -81,7 +89,32 @@ export default function LoginScreen({ navigation }) {
       }),
     ]).start();
     // Add your login logic here
-    navigation.navigate('rosterView');
+    let object = {
+      domain: domain,
+      user: '',
+      code: email,
+      screen: '',
+      token: '',
+      key: '',
+      stamp: '',
+      company: '',
+      isEmbeddedLogin: false,
+      appToken: '',
+      employeeAccessSignature: '',
+      password: password,
+      session: '',
+    };
+    console.log(object, 'login object');
+    try {
+      const response = await verifyLogin(object);
+      if (response?.data) {
+        dispatch(login(response.data));
+        navigation.navigate('Home');
+      }
+      console.log(response, 'login response');
+    } catch (error) {
+      console.log(error, 'login error');
+    }
   };
 
   return (
@@ -116,7 +149,7 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.card}>
               {/* Email Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
+                <Text style={styles.label}>User Name</Text>
                 <Animated.View
                   style={[
                     styles.inputWrapper,
@@ -124,9 +157,6 @@ export default function LoginScreen({ navigation }) {
                     { transform: [{ scale: emailScale }] },
                   ]}
                 >
-                  <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>✉️</Text>
-                  </View>
                   <TextInput
                     style={styles.input}
                     value={email}
@@ -152,9 +182,6 @@ export default function LoginScreen({ navigation }) {
                     { transform: [{ scale: passwordScale }] },
                   ]}
                 >
-                  <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>🔒</Text>
-                  </View>
                   <TextInput
                     style={[styles.input, styles.passwordInput]}
                     value={password}
@@ -170,9 +197,10 @@ export default function LoginScreen({ navigation }) {
                     style={styles.eyeButton}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Text style={styles.eyeIcon}>
-                      {showPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
+                    <Image
+                      source={showPassword ? icons.eyeOpen : icons.eyeClose}
+                      style={{ width: 20, height: 20, resizeMode: 'contain' }}
+                    />
                   </TouchableOpacity>
                 </Animated.View>
               </View>

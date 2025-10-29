@@ -7,8 +7,8 @@ const verifyDomain = data => {
   );
 };
 
-const verifyLogin = () => {
-  return axiosInstance.post(API_ENDPOINTS.LOGIN);
+const verifyLogin = data => {
+  return axiosInstance.post(API_ENDPOINTS.LOGIN, data);
 };
 
 export { verifyDomain, verifyLogin };

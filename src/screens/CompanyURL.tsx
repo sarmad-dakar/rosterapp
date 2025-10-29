@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { verifyDomain } from '../api/auth';
@@ -18,13 +20,11 @@ const { width, height } = Dimensions.get('window');
 
 export default function ModernLoginScreen({ navigation }) {
   const [domain, setDomain] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
   const emailScale = useRef(new Animated.Value(1)).current;
-  const passwordScale = useRef(new Animated.Value(1)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -52,24 +52,15 @@ export default function ModernLoginScreen({ navigation }) {
     }).start();
   };
 
-  const handlePasswordFocus = () => {
-    setPasswordFocused(true);
-    Animated.spring(passwordScale, {
-      toValue: 1.02,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePasswordBlur = () => {
-    setPasswordFocused(false);
-    Animated.spring(passwordScale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const handleLoginPress = async () => {
-    console.log('initiated');
+    if (!domain.trim()) {
+      Alert.alert('Error', 'Please enter your domain.');
+      return;
+    }
+    navigation.navigate('loginScreen', { domain: `https://${domain}` });
+    return;
+    setLoading(true);
+
     Animated.sequence([
       Animated.timing(buttonScale, {
         toValue: 0.95,
@@ -82,12 +73,19 @@ export default function ModernLoginScreen({ navigation }) {
         useNativeDriver: true,
       }),
     ]).start();
-    // Add your login logic here
-    let object = {
-      domain: domain,
-    };
-    const response = await verifyDomain(object);
-    console.log('Domain verification response:', response);
+
+    try {
+      const response = await verifyDomain({ domain });
+      if (response?.data) {
+        navigation.navigate('loginScreen', { domain: `https://${domain}` });
+      } else {
+        Alert.alert('Error', 'Invalid domain. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Domain verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -120,9 +118,9 @@ export default function ModernLoginScreen({ navigation }) {
 
             {/* Login Card */}
             <View style={styles.card}>
-              {/* Email Input */}
+              {/* Domain Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
+                <Text style={styles.label}>Domain</Text>
                 <Animated.View
                   style={[
                     styles.inputWrapper,
@@ -131,7 +129,7 @@ export default function ModernLoginScreen({ navigation }) {
                   ]}
                 >
                   <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>Https://</Text>
+                    <Text style={styles.icon}>https://</Text>
                   </View>
                   <TextInput
                     style={styles.input}
@@ -141,9 +139,7 @@ export default function ModernLoginScreen({ navigation }) {
                     onBlur={handleEmailBlur}
                     placeholder="Enter your domain"
                     placeholderTextColor="#9CA3AF"
-                    keyboardType="email-address"
                     autoCapitalize="none"
-                    autoComplete="email"
                   />
                 </Animated.View>
               </View>
@@ -158,15 +154,22 @@ export default function ModernLoginScreen({ navigation }) {
                 <TouchableOpacity
                   onPress={handleLoginPress}
                   activeOpacity={0.9}
+                  disabled={loading}
                 >
                   <LinearGradient
                     colors={['#2563EB', '#4F46E5']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={styles.loginButton}
+                    style={[styles.loginButton, loading && { opacity: 0.7 }]}
                   >
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                    <Text style={styles.arrowIcon}>→</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Text style={styles.loginButtonText}>Sign In</Text>
+                        <Text style={styles.arrowIcon}>→</Text>
+                      </>
+                    )}
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
@@ -182,31 +185,24 @@ export default function ModernLoginScreen({ navigation }) {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Loader Overlay */}
+      {loading && (
+        <View style={styles.loaderOverlay}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <Text style={styles.loaderText}>Verifying domain...</Text>
+        </View>
+      )}
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
+  container: { flex: 1 },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  content: { width: '100%', maxWidth: 400, alignSelf: 'center' },
+  logoContainer: { alignItems: 'center', marginBottom: 40 },
   logoCircle: {
     width: 64,
     height: 64,
@@ -220,11 +216,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
+  logoText: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -232,14 +224,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  titleHighlight: {
-    color: '#2563EB',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
+  titleHighlight: { color: '#2563EB' },
+  subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center' },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
@@ -250,15 +236,8 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
+  inputGroup: { marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -268,42 +247,12 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     paddingHorizontal: 12,
   },
-  inputWrapperFocused: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  iconContainer: {
-    marginRight: 8,
-  },
-  icon: {
-    fontSize: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  passwordInput: {
-    paddingRight: 40,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 12,
-    padding: 8,
-  },
-  eyeIcon: {
-    fontSize: 20,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    color: '#2563EB',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  inputWrapperFocused: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
+  iconContainer: { marginRight: 8 },
+  icon: { fontSize: 12 },
+  input: { flex: 1, paddingVertical: 16, fontSize: 16, color: '#1F2937' },
+  forgotPassword: { alignSelf: 'flex-end', marginBottom: 24 },
+  forgotPasswordText: { color: '#2563EB', fontSize: 14, fontWeight: '600' },
   loginButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -317,28 +266,35 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   loginButtonText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
     marginRight: 8,
   },
-  arrowIcon: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  arrowIcon: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
   },
-  signupText: {
-    color: '#6B7280',
-    fontSize: 14,
+  signupText: { color: '#6B7280', fontSize: 14 },
+  signupLink: { color: '#2563EB', fontSize: 14, fontWeight: '600' },
+
+  // Loader Overlay Styles
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width,
+    height,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  signupLink: {
+  loaderText: {
+    marginTop: 10,
+    fontSize: 16,
     color: '#2563EB',
-    fontSize: 14,
     fontWeight: '600',
   },
 });

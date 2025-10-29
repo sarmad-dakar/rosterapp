@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import RoasterTabs from './Tabs/RosterTabs';
 import ModernLoginScreen from '../screens/CompanyURL';
 import LoginScreen from '../screens/LoginScreen';
+import { useSelector } from 'react-redux';
 // import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
@@ -18,11 +19,15 @@ const AuthStackNavigator = () => {
 };
 
 export default function AuthNavigator() {
+  const token = useSelector(state => state.auth?.token);
+  console.log(token, 'Auth Navigator Token');
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="LoginStack" component={AuthStackNavigator} />
-        <Stack.Screen name="Login" component={RoasterTabs} />
+        {token == null ? (
+          <Stack.Screen name="AuthStack" component={AuthStackNavigator} />
+        ) : null}
+        <Stack.Screen name="Home" component={RoasterTabs} />
       </Stack.Navigator>
     </NavigationContainer>
   );

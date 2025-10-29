@@ -1,11 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
-  user: null | { role: 'owner' | 'rider'; name: string };
+  user: null;
+  token?: string;
 }
 
 const initialState: AuthState = {
   user: null,
+  token: undefined,
 };
 
 export const authSlice = createSlice({
@@ -14,9 +16,11 @@ export const authSlice = createSlice({
   reducers: {
     login: (state, action: PayloadAction<AuthState['user']>) => {
       state.user = action.payload;
+      state.token = action.payload?.token;
     },
     logout: state => {
       state.user = null;
+      state.token = undefined;
     },
   },
 });

@@ -103,7 +103,7 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedGroups, setSelectedGroups] = useState<Company[]>([]);
-  const [filteredData, setFilteredData] = useState(MOCK_EMPLOYEES);
+  const [filteredData, setFilteredData] = useState(props?.data);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -122,11 +122,15 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
   }, [visible]);
 
   useEffect(() => {
+    setFilteredData(props?.data);
+  }, [props.data]);
+
+  useEffect(() => {
     if (searchText === '') {
-      setFilteredData(MOCK_EMPLOYEES);
+      setFilteredData(props?.data);
     } else {
       setFilteredData(
-        MOCK_EMPLOYEES.filter(
+        props?.data?.filter(
           item =>
             item.code.toLowerCase().includes(searchText.toLowerCase()) ||
             item.name.toLowerCase().includes(searchText.toLowerCase()),
@@ -271,7 +275,7 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
             <View style={styles.titleContainer}>
               <Text style={styles.title}>Select Employees</Text>
               <Text style={styles.subtitle}>
-                Choose from {MOCK_EMPLOYEES.length} available groups
+                Choose from {props?.data?.length} available groups
               </Text>
             </View>
           </View>

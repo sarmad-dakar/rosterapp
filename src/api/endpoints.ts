@@ -4,6 +4,8 @@ const API_ENDPOINTS = {
   VALIDATE_DOMAIN: 'domain/validate',
   LOGIN: 'user/login',
   LOGOUT: 'auth/logout',
+  TABLE_DATA: 'DynamicAPI/GetTableData',
+  GET_ROSTER_EMPLOYEES: 'EmployeeSetupAPI/GetEmployees',
 };
 
 export { API_ENDPOINTS };

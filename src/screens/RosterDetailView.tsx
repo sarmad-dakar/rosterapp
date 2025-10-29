@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -359,9 +359,10 @@ const scheduleData = {
   ],
 };
 
-const EmployeeWiseDeputyCalendar = () => {
+const EmployeeWiseDeputyCalendar = ({ navigation, route }) => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [expandedCells, setExpandedCells] = useState(new Set());
+
   const employeeInfoRef = React.useRef(null);
 
   const handleEmployeePress = employee => {

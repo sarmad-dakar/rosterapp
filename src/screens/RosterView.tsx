@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,16 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
+  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DropdownTrigger from '../components/dropdown';
 import CompaniesPopup from '../components/popups/companiesPopup';
 import RosterGroupPopup from '../components/popups/rosterGroupPopup';
 import EmployeesPopup from '../components/popups/employeePopup';
+import { dynamicTableEnum } from '../utils/dummyJson';
+import { getDynamicTableData, getRosterEmployees } from '../api/rosterSchedule';
+import moment from 'moment';
 
 export default function RosterView({ navigation }) {
   const [date, setDate] = useState(new Date());
@@ -22,9 +26,19 @@ export default function RosterView({ navigation }) {
   const [rosterGroup, setRosterGroup] = useState('');
   const [employeeCode, setEmployeeCode] = useState('');
 
+  const [companyData, setCompanyData] = useState([]);
+  const [rosterGroupData, setRosterGroupData] = useState([]);
+  const [employeeData, setEmployeeData] = useState([]);
+
   const companyRef = useRef<any>(null);
   const rosterRef = useRef<any>(null);
   const employeeRef = useRef<any>(null);
+
+  useEffect(() => {
+    fetchCompanyData();
+    fetchRosterData();
+    fetchEmployeeData();
+  }, []);
 
   const onChangeDate = (event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios'); // keep it open on iOS
@@ -33,22 +47,85 @@ export default function RosterView({ navigation }) {
     }
   };
 
-  const handleLoad = () => {
-    console.log({
-      date,
-      company,
-      rosterGroup,
-      employeeCode,
-    });
-    let roasterData = {
-      date: date.toDateString(),
-      company,
-      rosterGroup,
-      employeeCode,
-    };
-    navigation.navigate('rosterDetailView', { roasterData });
+  const fetchCompanyData = async () => {
+    try {
+      const object = {
+        tableDataEnum: dynamicTableEnum.CompanyCode,
+        apiParams: '',
+      };
+
+      const response = await getDynamicTableData(object);
+      console.log(response, 'Company Data');
+
+      setCompanyData(response?.data || []);
+      // Optional: check if response is valid
+      if (!response?.data) {
+        console.warn('No company data found.');
+      }
+    } catch (error) {
+      console.log('Error fetching company data:', error);
+    }
   };
 
+  const fetchRosterData = async () => {
+    try {
+      const object = {
+        tableDataEnum: dynamicTableEnum.RosterGroupings,
+        apiParams: '',
+      };
+
+      const response = await getDynamicTableData(object);
+      console.log(response, 'Roster Data');
+      setRosterGroupData(response?.data || []);
+      if (!response?.data) {
+        console.warn('No roster data found.');
+      }
+    } catch (error) {
+      console.log('Error fetching roster data:', error);
+    }
+  };
+
+  const fetchEmployeeData = async () => {
+    try {
+      const object = {
+        tableDataEnum: dynamicTableEnum.Employees,
+        apiParams: '',
+      };
+
+      const response = await getDynamicTableData(object);
+      console.log(response, 'Employee Data');
+      setEmployeeData(response?.data || []);
+      if (!response?.data) {
+        console.warn('No employee data found.');
+      }
+    } catch (error) {
+      console.log('Error fetching employee data:', error);
+    }
+  };
+
+  const handleLoad = async () => {
+    try {
+      let roasterData = {
+        selectedDate: moment(date).format('YYYY-MM-DD'),
+        companyCodes: company?.map(item => item.code) || [],
+        rosterGroupings: rosterGroup?.map(item => item.code) || [],
+        employeeCodes: employeeCode?.map(item => item.code) || [],
+        rosterSort: '',
+        pageNo: 1,
+        endingDate: '',
+        weekDuration: 1,
+      };
+      const response = await getRosterEmployees(roasterData);
+      console.log(response, 'roasterData');
+      if (response?.data) {
+        navigation.navigate('rosterDetailView', {
+          employeeData: response?.data?.employees,
+        });
+      }
+    } catch (error) {
+      console.log('Error fetching roster employees data:', error);
+    }
+  };
   const formatDate = date => {
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -135,9 +212,21 @@ export default function RosterView({ navigation }) {
         </View>
 
         {/* Popup components */}
-        <CompaniesPopup ref={companyRef} onSelect={setCompany} />
-        <RosterGroupPopup ref={rosterRef} onSelect={setRosterGroup} />
-        <EmployeesPopup ref={employeeRef} onSelect={setEmployeeCode} />
+        <CompaniesPopup
+          data={companyData}
+          ref={companyRef}
+          onSelect={setCompany}
+        />
+        <RosterGroupPopup
+          data={rosterGroupData}
+          ref={rosterRef}
+          onSelect={setRosterGroup}
+        />
+        <EmployeesPopup
+          data={employeeData}
+          ref={employeeRef}
+          onSelect={setEmployeeCode}
+        />
       </View>
     </SafeAreaView>
   );

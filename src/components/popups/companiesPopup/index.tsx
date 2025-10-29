@@ -45,7 +45,7 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([]);
-  const [filteredData, setFilteredData] = useState(MOCK_COMPANIES);
+  const [filteredData, setFilteredData] = useState(props.data);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -54,6 +54,10 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
     hide,
     show,
   }));
+
+  useEffect(() => {
+    setFilteredData(props?.data);
+  }, [props.data]);
 
   useEffect(() => {
     if (visible) {
@@ -65,10 +69,10 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
 
   useEffect(() => {
     if (searchText === '') {
-      setFilteredData(MOCK_COMPANIES);
+      setFilteredData(props?.data);
     } else {
       setFilteredData(
-        MOCK_COMPANIES.filter(
+        props?.data.filter(
           item =>
             item.code.toLowerCase().includes(searchText.toLowerCase()) ||
             item.description.toLowerCase().includes(searchText.toLowerCase()),
@@ -198,7 +202,7 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
             <View style={styles.titleContainer}>
               <Text style={styles.title}>Select Company</Text>
               <Text style={styles.subtitle}>
-                Choose from {MOCK_COMPANIES.length} available companies
+                Choose from {props?.data.length} available companies
               </Text>
             </View>
           </View>
