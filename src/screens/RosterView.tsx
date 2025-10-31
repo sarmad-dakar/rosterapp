@@ -22,9 +22,9 @@ export default function RosterView({ navigation }) {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [company, setCompany] = useState('');
-  const [rosterGroup, setRosterGroup] = useState('');
-  const [employeeCode, setEmployeeCode] = useState('');
+  const [company, setCompany] = useState([]);
+  const [rosterGroup, setRosterGroup] = useState([]);
+  const [employeeCode, setEmployeeCode] = useState([]);
 
   const [companyData, setCompanyData] = useState([]);
   const [rosterGroupData, setRosterGroupData] = useState([]);
@@ -120,6 +120,8 @@ export default function RosterView({ navigation }) {
       if (response?.data) {
         navigation.navigate('rosterDetailView', {
           employeeData: response?.data?.employees,
+          employeeCodes: roasterData.employeeCodes,
+          selectedDate: moment(date),
         });
       }
     } catch (error) {

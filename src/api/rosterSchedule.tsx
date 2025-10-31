@@ -9,4 +9,8 @@ const getRosterEmployees = data => {
   return axiosInstance.post(API_ENDPOINTS.GET_ROSTER_EMPLOYEES, data);
 };
 
-export { getDynamicTableData, getRosterEmployees };
+const getRosterSchedules = data => {
+  return axiosInstance.post(API_ENDPOINTS.GET_ROSTER_SCHEDULES, data);
+};
+
+export { getDynamicTableData, getRosterEmployees, getRosterSchedules };

@@ -10,16 +10,18 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
+import { getRosterSchedules } from '../api/rosterSchedule';
+import moment from 'moment';
 
-const weekDays = [
-  { day: 'Mon', date: 21, month: 'Jul' },
-  { day: 'Tue', date: 22, month: 'Jul' },
-  { day: 'Wed', date: 23, month: 'Jul' },
-  { day: 'Thu', date: 24, month: 'Jul' },
-  { day: 'Fri', date: 25, month: 'Jul' },
-  { day: 'Sat', date: 26, month: 'Jul' },
-  { day: 'Sun', date: 27, month: 'Jul' },
-];
+// const weekDays = [
+//   { day: 'Mon', date: 21, month: 'Jul' },
+//   { day: 'Tue', date: 22, month: 'Jul' },
+//   { day: 'Wed', date: 23, month: 'Jul' },
+//   { day: 'Thu', date: 24, month: 'Jul' },
+//   { day: 'Fri', date: 25, month: 'Jul' },
+//   { day: 'Sat', date: 26, month: 'Jul' },
+//   { day: 'Sun', date: 27, month: 'Jul' },
+// ];
 
 const calendarColors = {
   green: '#4caf4f4c',
@@ -309,13 +311,18 @@ const scheduleData = {
 const RosterDetailViewV2 = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState(22);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [weekDays, setWeekDays] = useState([]);
   const employeeInfoRef = React.useRef(null);
-
+  const employeeCodes = route?.params?.employeeCodes;
   const [scheduleTesting, setScheduleTesting] = useState();
   const employeeData = route?.params?.employeeData;
-  console.log(employeeData, 'employeeData');
+  const rosterDate = route?.params?.selectedDate;
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
   useEffect(() => {
     sortJson(employeeData);
+    fetchScheduleData();
   }, [employeeData]);
 
   const sortJson = data => {
@@ -337,33 +344,113 @@ const RosterDetailViewV2 = ({ route }) => {
       saturday: [],
       sunday: [],
     };
+    setDateFrom(moment(rosterDate));
+    setDateTo(moment(rosterDate).add(6, 'days'));
+
+    let tempWeekDays = [];
+    for (let index = 0; index < 7; index++) {
+      let currentDate = moment(rosterDate).add(index, 'days');
+      let object = {
+        day: currentDate.format('ddd'),
+        date: currentDate.format('DD'),
+        month: currentDate.format('MMM'),
+      };
+      tempWeekDays.push(object);
+    }
+    setWeekDays(tempWeekDays);
 
     dummyWeekdays.forEach(day => {
       data.forEach(employee => {
         let employeeObject = {
           employee: employee,
+          attributes: {
+            backColor: '',
+            date: '',
+            foreColor: calendarColors.green,
+            shiftHours: '',
+          },
           shifts: [
             {
-              timeIn: '2:00pm',
-              timeOut: '10:00pm',
-              breakTime: '45m',
-              status: 'PENDING',
-              role: 'Night Shift',
+              shiftCode: 'D',
+              shiftDesc: 'Day',
+              shiftTimeFrom: '09:00:00',
+              shiftTimeTo: '17:00:00',
+              shiftBreak: '00:15',
+              color: calendarColors.green,
+            },
+            {
+              shiftCode: 'D',
+              shiftDesc: 'Day',
+              shiftTimeFrom: '09:00:00',
+              shiftTimeTo: '17:00:00',
+              shiftBreak: '00:15',
+              color: calendarColors.green,
             },
           ],
         };
         basicObject[day].push(employeeObject);
       });
     });
-
+    setScheduleTesting(basicObject);
     console.log('Sorted Data:', basicObject);
   };
+
+  const fetchScheduleData = async () => {
+    const apiObject = {
+      dateFrom: moment(rosterDate).format('YYYY-MM-DD'),
+      dateTo: moment(rosterDate).add(6, 'days').format('YYYY-MM-DD'),
+      employeeCodes: employeeData.map(emp => emp.code),
+      pageNo: 1,
+      isDetailed: 1,
+    };
+    console.log(apiObject, 'scheduled data api object');
+    const response = await getRosterSchedules(apiObject);
+    console.log(response, 'Schedule Data response');
+    sortScheduleData(response?.data);
+  };
+
+  const sortScheduleData = data => {
+    try {
+      let scheduleObject = scheduleTesting;
+      console.log(scheduleObject, 'shedule object before');
+      data.forEach((shiftObject, shiftObjectIndex) => {
+        console.log(shiftObject?.rosterShifts, 'shiftObject?.rosterShifts');
+        shiftObject?.rosterShifts?.forEach((shift, shiftIndex) => {
+          console.log(
+            scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
+              shiftObjectIndex
+            ],
+            'shedule object day',
+          );
+          console.log(moment(shift.date).format('dddd'));
+          scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
+            shiftObjectIndex
+          ].shifts = shift?.shifts;
+
+          // scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
+          //   shiftObjectIndex
+          // ]['attributes'] = {
+          //   backColor: shift?.backColor,
+          //   date: shift?.date,
+          //   foreColor: shift?.foreColor,
+          //   shiftHours: shift?.shiftHours,
+          // };
+        });
+      });
+      setScheduleTesting(scheduleObject);
+      console.log(scheduleObject, 'shedule object after');
+    } catch (error) {
+      console.log(error, 'error in sorting schedule data');
+    }
+  };
+
   const handleEmployeePress = employee => {
     employeeInfoRef.current?.show(employee);
   };
 
   const toggleGroupExpansion = (dayKey, employeeName) => {
     const groupKey = `${dayKey}-${employeeName}`;
+    console.log(groupKey, 'groupKeys');
     setExpandedGroups(prev => ({
       ...prev,
       [groupKey]: !prev[groupKey],
@@ -444,15 +531,22 @@ const RosterDetailViewV2 = ({ route }) => {
     >
       <View style={styles.shiftContent}>
         <View style={styles.shiftInfo}>
-          <Text style={styles.shiftTime}>IN : {shift.timeIn}</Text>
-          <Text style={styles.shiftTime}>OUT : {shift.timeOut}</Text>
-          <Text style={styles.shiftTime}>BREAK : {shift.breakTime}</Text>
+          <Text style={styles.shiftTime}>
+            IN : {shift.shiftTimeFrom || `\nN/A`}
+          </Text>
+          <Text style={styles.shiftTime}>
+            OUT : {shift.shiftTimeTo || `\nN/A`}
+          </Text>
+          <Text style={styles.shiftTime}>
+            BREAK : {shift.shiftBreak || `\nN/A`}
+          </Text>
         </View>
 
         {isFirstShift && hasMultipleShifts && (
           <TouchableOpacity
-            style={styles.expandButton}
+            style={[styles.expandButton, { backgroundColor: 'red' }]}
             onPress={e => {
+              console.log('hellow ');
               e.stopPropagation();
               onToggleExpand();
             }}
@@ -472,16 +566,16 @@ const RosterDetailViewV2 = ({ route }) => {
   const renderEmployeeGroup = (employeeData, groupIndex, dayKey) => {
     const { employee: employeeName, shifts } = employeeData;
     const hasMultipleShifts = shifts.length > 1;
-    const groupKey = `${dayKey}-${employeeName}`;
+    const groupKey = `${dayKey}-${employeeName?.name}`;
     const isExpanded = expandedGroups[groupKey] || false;
-
+    console.log(hasMultipleShifts ? shifts.slice(1) : null, 'shifts to show');
     // Show only first shift if collapsed and has multiple shifts
     const shiftsToShow =
       hasMultipleShifts && !isExpanded ? [shifts[0]] : shifts;
 
     return (
-      <View key={`${employeeName}-${groupIndex}`} style={styles.employeeGroup}>
-        <Text style={styles.employeeGroupHeader}>{employeeName}</Text>
+      <View key={`-${groupIndex}`} style={styles.employeeGroup}>
+        <Text style={styles.employeeGroupHeader}>{employeeName?.name}</Text>
         {shiftsToShow.map((shift, shiftIndex) =>
           renderShiftBlock(
             shift,
@@ -489,8 +583,8 @@ const RosterDetailViewV2 = ({ route }) => {
             shiftIndex === 0, // isFirstShift
             hasMultipleShifts,
             isExpanded,
-            () => toggleGroupExpansion(dayKey, employeeName),
-            employeeName,
+            () => toggleGroupExpansion(dayKey, employeeName?.name),
+            employeeName?.name,
           ),
         )}
 
@@ -506,7 +600,7 @@ const RosterDetailViewV2 = ({ route }) => {
                   false,
                   false,
                   null,
-                  employeeName,
+                  employeeName?.name,
                 ),
               )}
           </View>
@@ -517,7 +611,7 @@ const RosterDetailViewV2 = ({ route }) => {
 
   const renderDayColumn = (day, index) => {
     const dayKey = getDayKey(day.day);
-    const employeeData = scheduleData[dayKey] || [];
+    const employeeData = scheduleTesting[dayKey] || [];
 
     return (
       <View key={index} style={styles.dayColumn}>
@@ -526,7 +620,7 @@ const RosterDetailViewV2 = ({ route }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.dayScrollContent}
         >
-          {employeeData.map((employeeGroup, groupIndex) =>
+          {employeeData?.map((employeeGroup, groupIndex) =>
             renderEmployeeGroup(employeeGroup, groupIndex, dayKey),
           )}
         </ScrollView>
@@ -560,7 +654,9 @@ const RosterDetailViewV2 = ({ route }) => {
 
       {/* Schedule Columns */}
       <View style={styles.scheduleContainer}>
-        {weekDays.map((day, index) => renderDayColumn(day, index))}
+        {scheduleTesting
+          ? weekDays.map((day, index) => renderDayColumn(day, index))
+          : null}
       </View>
       <EmployeeInfoPopup ref={employeeInfoRef} />
     </SafeAreaView>

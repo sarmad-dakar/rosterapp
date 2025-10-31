@@ -6,6 +6,7 @@ const API_ENDPOINTS = {
   LOGOUT: 'auth/logout',
   TABLE_DATA: 'DynamicAPI/GetTableData',
   GET_ROSTER_EMPLOYEES: 'EmployeeSetupAPI/GetEmployees',
+  GET_ROSTER_SCHEDULES: 'RoasterAPI/GetRosterEntriesData',
 };
 
 export { API_ENDPOINTS };
