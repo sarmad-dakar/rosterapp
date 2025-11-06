@@ -41,7 +41,7 @@ const EmployeeInfoPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const [visible, setVisible] = useState(false);
-
+  const [currentEmployeeData, setCurrentEmployeeData] = useState(null);
   // Default employee data
   const employeeData = props.employeeData || {
     name: 'Georgina Sant',
@@ -105,7 +105,10 @@ const EmployeeInfoPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
     ]).start(() => setVisible(false));
   };
 
-  const show = () => setVisible(true);
+  const show = employeeData => {
+    setCurrentEmployeeData(employeeData);
+    setVisible(true);
+  };
   const hide = () => setVisible(false);
 
   const InfoCard = ({
@@ -201,10 +204,14 @@ const EmployeeInfoPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
               <IoniconsIcon name="person" size={28} color="#ffffff" />
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.employeeName}>{employeeData.name}</Text>
+              <Text style={styles.employeeName}>
+                {currentEmployeeData?.allName}
+              </Text>
               <View style={styles.idContainer}>
                 <Icon name="badge" size={14} color="#6B7280" />
-                <Text style={styles.employeeId}>{employeeData.id}</Text>
+                <Text style={styles.employeeId}>
+                  {currentEmployeeData?.code}
+                </Text>
               </View>
             </View>
             <TouchableOpacity style={styles.moreButton}>
@@ -217,15 +224,15 @@ const EmployeeInfoPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
         <View style={styles.content}>
           <InfoCard
             iconName="work"
-            title={employeeData.role}
+            title={currentEmployeeData?.jobDesc}
             subtitle="Role & Department"
             color="#4F46E5"
           />
 
           <InfoCard
             iconName="more-time"
-            title={employeeData.acnooNumber}
-            subtitle="ACNOO Number"
+            title={currentEmployeeData?.scheduleDesc}
+            subtitle="Schedule Description"
             color="#059669"
           />
 

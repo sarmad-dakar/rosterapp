@@ -11,12 +11,14 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { icons } from '../assets';
 import { verifyLogin } from '../api/auth';
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/slices/authSlice';
+import { colors } from '../utils/colors';
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation, route }) {
@@ -25,7 +27,7 @@ export default function LoginScreen({ navigation, route }) {
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   const domain = route.params?.domain || '';
@@ -106,13 +108,16 @@ export default function LoginScreen({ navigation, route }) {
     };
     console.log(object, 'login object');
     try {
+      setLoading(true);
       const response = await verifyLogin(object);
+      setLoading(false);
       if (response?.data) {
         dispatch(login(response.data));
         navigation.navigate('Home');
       }
       console.log(response, 'login response');
     } catch (error) {
+      setLoading(false);
       console.log(error, 'login error');
     }
   };
@@ -134,7 +139,7 @@ export default function LoginScreen({ navigation, route }) {
             {/* Logo Section */}
             <View style={styles.logoContainer}>
               <LinearGradient
-                colors={['#2563EB', '#4F46E5']}
+                colors={colors.btnGradiant}
                 style={styles.logoCircle}
               >
                 <Text style={styles.logoText}>R</Text>
@@ -211,22 +216,30 @@ export default function LoginScreen({ navigation, route }) {
               </TouchableOpacity>
 
               {/* Login Button */}
-              <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                <TouchableOpacity
-                  onPress={handleLoginPress}
-                  activeOpacity={0.9}
-                >
-                  <LinearGradient
-                    colors={['#2563EB', '#4F46E5']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.loginButton}
+              {loading ? (
+                <ActivityIndicator
+                  size="large"
+                  color={colors.primary}
+                  style={{ marginTop: 10, marginBottom: 10 }}
+                />
+              ) : (
+                <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                  <TouchableOpacity
+                    onPress={handleLoginPress}
+                    activeOpacity={0.9}
                   >
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                    <Text style={styles.arrowIcon}>→</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </Animated.View>
+                    <LinearGradient
+                      colors={['#0d4483', '#1a5da8']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.loginButton}
+                    >
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <Text style={styles.arrowIcon}>→</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              )}
 
               {/* Sign Up Link */}
               <View style={styles.signupContainer}>
@@ -290,7 +303,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   titleHighlight: {
-    color: '#2563EB',
+    color: colors.primary,
   },
   subtitle: {
     fontSize: 16,
@@ -357,7 +370,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#2563EB',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -394,7 +407,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signupLink: {
-    color: '#2563EB',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

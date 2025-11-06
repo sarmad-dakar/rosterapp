@@ -7,7 +7,8 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
-  Alert,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DropdownTrigger from '../components/dropdown';
@@ -17,6 +18,10 @@ import EmployeesPopup from '../components/popups/employeePopup';
 import { dynamicTableEnum } from '../utils/dummyJson';
 import { getDynamicTableData, getRosterEmployees } from '../api/rosterSchedule';
 import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateEmployees } from '../redux/slices/authSlice';
+import LinearGradient from 'react-native-linear-gradient';
+import { vh } from '../utils/units';
 
 export default function RosterView({ navigation }) {
   const [date, setDate] = useState(new Date());
@@ -28,20 +33,38 @@ export default function RosterView({ navigation }) {
 
   const [companyData, setCompanyData] = useState([]);
   const [rosterGroupData, setRosterGroupData] = useState([]);
-  const [employeeData, setEmployeeData] = useState([]);
+  const allEmployees = useSelector(state => state.auth?.employees);
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const companyRef = useRef<any>(null);
   const rosterRef = useRef<any>(null);
   const employeeRef = useRef<any>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     fetchCompanyData();
     fetchRosterData();
     fetchEmployeeData();
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const onChangeDate = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios'); // keep it open on iOS
+    setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setDate(selectedDate);
     }
@@ -53,15 +76,8 @@ export default function RosterView({ navigation }) {
         tableDataEnum: dynamicTableEnum.CompanyCode,
         apiParams: '',
       };
-
       const response = await getDynamicTableData(object);
-      console.log(response, 'Company Data');
-
       setCompanyData(response?.data || []);
-      // Optional: check if response is valid
-      if (!response?.data) {
-        console.warn('No company data found.');
-      }
     } catch (error) {
       console.log('Error fetching company data:', error);
     }
@@ -73,13 +89,8 @@ export default function RosterView({ navigation }) {
         tableDataEnum: dynamicTableEnum.RosterGroupings,
         apiParams: '',
       };
-
       const response = await getDynamicTableData(object);
-      console.log(response, 'Roster Data');
       setRosterGroupData(response?.data || []);
-      if (!response?.data) {
-        console.warn('No roster data found.');
-      }
     } catch (error) {
       console.log('Error fetching roster data:', error);
     }
@@ -91,13 +102,8 @@ export default function RosterView({ navigation }) {
         tableDataEnum: dynamicTableEnum.Employees,
         apiParams: '',
       };
-
       const response = await getDynamicTableData(object);
-      console.log(response, 'Employee Data');
-      setEmployeeData(response?.data || []);
-      if (!response?.data) {
-        console.warn('No employee data found.');
-      }
+      dispatch(updateEmployees(response?.data));
     } catch (error) {
       console.log('Error fetching employee data:', error);
     }
@@ -115,8 +121,9 @@ export default function RosterView({ navigation }) {
         endingDate: '',
         weekDuration: 1,
       };
+      setLoading(true);
       const response = await getRosterEmployees(roasterData);
-      console.log(response, 'roasterData');
+      setLoading(false);
       if (response?.data) {
         navigation.navigate('rosterDetailView', {
           employeeData: response?.data?.employees,
@@ -126,50 +133,97 @@ export default function RosterView({ navigation }) {
       }
     } catch (error) {
       console.log('Error fetching roster employees data:', error);
+      setLoading(false);
     }
   };
+
   const formatDate = date => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+    return { day, month, year, weekday };
   };
+
+  const dateInfo = formatDate(date);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Load Roster Data</Text>
-          <Text style={styles.subtitle}>
-            Select your filters to load roster information
-          </Text>
+        {/* Modern Header with Gradient */}
+        <View style={styles.headerContainer}>
+          <LinearGradient
+            colors={['#0d4483', '#1a5da8', '#2563eb']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <Animated.View
+              style={[
+                styles.header,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.title}>Roster Schedule</Text>
+              <Text style={styles.subtitle}>
+                Configure and load your roster data
+              </Text>
+            </Animated.View>
+          </LinearGradient>
         </View>
 
-        <View style={styles.form}>
-          {/* Date Picker Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Date Selection</Text>
+        <Animated.ScrollView
+          style={[styles.scrollView, { opacity: fadeAnim }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Stats Card */}
+          <View style={styles.statsCard}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{companyData?.length}</Text>
+              <Text style={styles.statLabel}>Companies</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{rosterGroupData?.length}</Text>
+              <Text style={styles.statLabel}>Groups</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{allEmployees?.length}</Text>
+              <Text style={styles.statLabel}>Employees</Text>
+            </View>
+          </View>
+
+          {/* Modern Date Card */}
+          <View style={styles.dateSection}>
+            <Text style={styles.sectionLabel}>Select Date</Text>
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
-              style={styles.dateButton}
+              style={styles.dateCard}
               activeOpacity={0.7}
             >
-              <View style={styles.dateContent}>
-                <View>
-                  <Text style={styles.dateLabel}>Selected Date</Text>
-                  <Text style={styles.dateValue}>{formatDate(date)}</Text>
+              <LinearGradient
+                colors={['#0d4483', '#1a5da8', '#2563eb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.dateGradient}
+              >
+                <View style={styles.dateLeft}>
+                  <Text style={styles.dateDay}>{dateInfo.day}</Text>
+                  <Text style={styles.dateMonth}>{dateInfo.month}</Text>
                 </View>
-                <View style={styles.dateIcon}>
-                  <Text style={styles.calendarEmoji}>📅</Text>
+                <View style={styles.dateDivider} />
+                <View style={styles.dateRight}>
+                  <Text style={styles.dateWeekday}>{dateInfo.weekday}</Text>
+                  <Text style={styles.dateYear}>{dateInfo.year}</Text>
                 </View>
-              </View>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
-          {/* DateTime Picker */}
           {showDatePicker && (
             <DateTimePicker
               value={date}
@@ -180,8 +234,8 @@ export default function RosterView({ navigation }) {
           )}
 
           {/* Filters Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Filters</Text>
+          <View style={styles.filtersSection}>
+            <Text style={styles.sectionLabel}>Filter Options</Text>
             <View style={styles.filtersContainer}>
               <DropdownTrigger
                 label="Company"
@@ -200,16 +254,32 @@ export default function RosterView({ navigation }) {
               />
             </View>
           </View>
-        </View>
+        </Animated.ScrollView>
 
-        {/* Load Button */}
+        {/* Modern Load Button */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.loadButton}
             onPress={handleLoad}
             activeOpacity={0.8}
+            disabled={loading}
           >
-            <Text style={styles.loadButtonText}>Load Roster Data</Text>
+            <LinearGradient
+              colors={
+                loading
+                  ? ['#94a3b8', '#cbd5e1']
+                  : ['#0d4483', '#1a5da8', '#2563eb']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.buttonGradient}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.loadButtonText}>Load Roster Data</Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
@@ -225,7 +295,7 @@ export default function RosterView({ navigation }) {
           onSelect={setRosterGroup}
         />
         <EmployeesPopup
-          data={employeeData}
+          data={allEmployees}
           ref={employeeRef}
           onSelect={setEmployeeCode}
         />
@@ -243,115 +313,179 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  header: {
+  headerContainer: {
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    paddingVertical: 5,
+    paddingTop: Platform.OS == 'ios' ? vh * 8 : vh * 7,
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+  },
+  header: {
+    gap: 1,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-    letterSpacing: -0.5,
+    fontSize: vh * 2.5,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#64748b',
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 22,
+    fontWeight: '500',
   },
-  form: {
+  scrollView: {
     flex: 1,
+  },
+  dateSection: {
     paddingHorizontal: 24,
     paddingTop: 24,
+    marginBottom: 8,
   },
-  section: {
-    marginBottom: 32,
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  sectionTitle: {
-    fontSize: 18,
+  dateCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0d4483',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  dateGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+  },
+  dateLeft: {
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  dateDay: {
+    fontSize: vh * 3,
+    fontWeight: '800',
+    color: '#ffffff',
+    // lineHeight: 44,
+  },
+  dateMonth: {
+    fontSize: vh * 2,
     fontWeight: '600',
-    color: '#334155',
-    marginBottom: 16,
-    letterSpacing: -0.2,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  dateButton: {
+  dateDivider: {
+    width: 2,
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 20,
+  },
+  dateRight: {
+    flex: 1,
+  },
+  dateWeekday: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  dateYear: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  filtersSection: {
+    paddingHorizontal: 24,
+    paddingTop: 5,
+  },
+  filtersContainer: {
+    gap: 14,
+  },
+  statsCard: {
+    flexDirection: 'row',
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 20,
+    marginHorizontal: 24,
+    marginTop: 24,
     padding: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
       },
       android: {
         elevation: 4,
       },
     }),
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
-  dateContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  statItem: {
+    flex: 1,
     alignItems: 'center',
   },
-  dateLabel: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '500',
+  statValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0d4483',
     marginBottom: 4,
   },
-  dateValue: {
-    fontSize: 15,
+  statLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  dateIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  calendarEmoji: {
-    fontSize: 24,
-  },
-  filtersContainer: {
-    gap: 12,
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#e2e8f0',
   },
   buttonContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 16,
-    paddingTop: 16,
+    paddingBottom: 24,
+    paddingTop: 12,
   },
   loadButton: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
+    borderRadius: 20,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#3b82f6',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#6366f1',
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
     }),
   },
+  buttonGradient: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   loadButtonText: {
     color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

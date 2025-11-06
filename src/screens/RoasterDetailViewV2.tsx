@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
 import { getRosterSchedules } from '../api/rosterSchedule';
 import moment from 'moment';
+import { vh } from '../utils/units';
 
 // const weekDays = [
 //   { day: 'Mon', date: 21, month: 'Jul' },
@@ -322,8 +324,13 @@ const RosterDetailViewV2 = ({ route }) => {
 
   useEffect(() => {
     sortJson(employeeData);
-    fetchScheduleData();
   }, [employeeData]);
+
+  useEffect(() => {
+    if (scheduleTesting) {
+      // fetchScheduleData();
+    }
+  }, [scheduleTesting]);
 
   const sortJson = data => {
     let dummyWeekdays = [
@@ -371,15 +378,7 @@ const RosterDetailViewV2 = ({ route }) => {
           },
           shifts: [
             {
-              shiftCode: 'D',
-              shiftDesc: 'Day',
-              shiftTimeFrom: '09:00:00',
-              shiftTimeTo: '17:00:00',
-              shiftBreak: '00:15',
-              color: calendarColors.green,
-            },
-            {
-              shiftCode: 'D',
+              shiftCode: null,
               shiftDesc: 'Day',
               shiftTimeFrom: '09:00:00',
               shiftTimeTo: '17:00:00',
@@ -391,11 +390,12 @@ const RosterDetailViewV2 = ({ route }) => {
         basicObject[day].push(employeeObject);
       });
     });
-    setScheduleTesting(basicObject);
+    // setScheduleTesting(basicObject);
+    fetchScheduleData(basicObject);
     console.log('Sorted Data:', basicObject);
   };
 
-  const fetchScheduleData = async () => {
+  const fetchScheduleData = async basicObject => {
     const apiObject = {
       dateFrom: moment(rosterDate).format('YYYY-MM-DD'),
       dateTo: moment(rosterDate).add(6, 'days').format('YYYY-MM-DD'),
@@ -406,12 +406,12 @@ const RosterDetailViewV2 = ({ route }) => {
     console.log(apiObject, 'scheduled data api object');
     const response = await getRosterSchedules(apiObject);
     console.log(response, 'Schedule Data response');
-    sortScheduleData(response?.data);
+    sortScheduleData(response?.data, basicObject);
   };
 
-  const sortScheduleData = data => {
+  const sortScheduleData = (data, basicObject) => {
     try {
-      let scheduleObject = scheduleTesting;
+      let scheduleObject = basicObject;
       console.log(scheduleObject, 'shedule object before');
       data.forEach((shiftObject, shiftObjectIndex) => {
         console.log(shiftObject?.rosterShifts, 'shiftObject?.rosterShifts');
@@ -427,14 +427,14 @@ const RosterDetailViewV2 = ({ route }) => {
             shiftObjectIndex
           ].shifts = shift?.shifts;
 
-          // scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
-          //   shiftObjectIndex
-          // ]['attributes'] = {
-          //   backColor: shift?.backColor,
-          //   date: shift?.date,
-          //   foreColor: shift?.foreColor,
-          //   shiftHours: shift?.shiftHours,
-          // };
+          scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
+            shiftObjectIndex
+          ]['attributes'] = {
+            backColor: shift?.backColor,
+            date: shift?.date,
+            foreColor: shift?.foreColor,
+            shiftHours: shift?.shiftHours,
+          };
         });
       });
       setScheduleTesting(scheduleObject);
@@ -518,64 +518,114 @@ const RosterDetailViewV2 = ({ route }) => {
     isExpanded = false,
     onToggleExpand = null,
     employeeName = '',
+    attributes,
   ) => (
-    <TouchableOpacity
-      onPress={() => handleEmployeePress(employeeName)}
+    <View
       activeOpacity={0.5}
       key={index}
       style={[
         styles.shiftBlock,
-        { backgroundColor: shift.color },
+        { backgroundColor: attributes?.backColor || calendarColors.green },
         isFirstShift && hasMultipleShifts && styles.firstShiftWithMultiple,
       ]}
     >
-      <View style={styles.shiftContent}>
-        <View style={styles.shiftInfo}>
-          <Text style={styles.shiftTime}>
-            IN : {shift.shiftTimeFrom || `\nN/A`}
-          </Text>
-          <Text style={styles.shiftTime}>
-            OUT : {shift.shiftTimeTo || `\nN/A`}
-          </Text>
-          <Text style={styles.shiftTime}>
-            BREAK : {shift.shiftBreak || `\nN/A`}
-          </Text>
-        </View>
+      {!shift?.shiftCode ? (
+        <Text style={{ fontSize: 10 }}>-No Shift-</Text>
+      ) : (
+        <View style={styles.shiftContent}>
+          <View style={styles.shiftInfo}>
+            <Text
+              style={[
+                styles.shiftTime,
+                { color: attributes?.foreColor || '#000' },
+              ]}
+            >
+              {shift?.shiftCode || `\nN/A`}
+            </Text>
 
-        {isFirstShift && hasMultipleShifts && (
-          <TouchableOpacity
-            style={[styles.expandButton, { backgroundColor: 'red' }]}
-            onPress={e => {
-              console.log('hellow ');
-              e.stopPropagation();
-              onToggleExpand();
-            }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Icon
-              name={isExpanded ? 'expand-less' : 'expand-more'}
-              size={16}
-              color="#666"
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
+            <Text
+              style={[
+                styles.shiftTime,
+                { color: attributes?.foreColor || '#000' },
+              ]}
+            >
+              <Text style={{ color: 'black' }}>IN :</Text>{' '}
+              {shift.shiftTimeFrom || `\nN/A`}
+            </Text>
+
+            <Text
+              style={[
+                styles.shiftTime,
+                { color: attributes?.foreColor || '#000' },
+              ]}
+            >
+              <Text style={{ color: 'black' }}>OUT :</Text>{' '}
+              {shift.shiftTimeTo || `\nN/A`}
+            </Text>
+            <Text
+              style={[
+                styles.shiftTime,
+                { color: attributes?.foreColor || '#000' },
+              ]}
+            >
+              <Text style={{ color: 'black' }}>BREAK :</Text>{' '}
+              {shift.shiftBreak || `\nN/A`}
+            </Text>
+          </View>
+
+          {isFirstShift && hasMultipleShifts && (
+            <TouchableOpacity
+              style={[styles.expandButton]}
+              onPress={e => {
+                console.log('hellow ');
+                e.stopPropagation();
+                onToggleExpand();
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Icon
+                name={isExpanded ? 'expand-less' : 'expand-more'}
+                size={16}
+                color="#666"
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+    </View>
   );
 
+  const shouldShowNewBlock = (multipleShifts, isExpanded) => {
+    if (multipleShifts && isExpanded) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const renderEmployeeGroup = (employeeData, groupIndex, dayKey) => {
-    const { employee: employeeName, shifts } = employeeData;
+    const { employee: employeeName, shifts, attributes } = employeeData;
     const hasMultipleShifts = shifts.length > 1;
     const groupKey = `${dayKey}-${employeeName?.name}`;
     const isExpanded = expandedGroups[groupKey] || false;
-    console.log(hasMultipleShifts ? shifts.slice(1) : null, 'shifts to show');
     // Show only first shift if collapsed and has multiple shifts
-    const shiftsToShow =
-      hasMultipleShifts && !isExpanded ? [shifts[0]] : shifts;
+    const shiftsToShow = shouldShowNewBlock(hasMultipleShifts, isExpanded)
+      ? [shifts[0]]
+      : [shifts[0]];
+
+    console.log(shifts.slice(1), shiftsToShow, isExpanded, 'shifts to show');
 
     return (
-      <View key={`-${groupIndex}`} style={styles.employeeGroup}>
-        <Text style={styles.employeeGroupHeader}>{employeeName?.name}</Text>
+      <View
+        key={`-${groupIndex}`}
+        style={[
+          styles.employeeGroup,
+          { height: isExpanded ? vh * 23 * shifts.length : vh * 23 },
+        ]}
+      >
+        <TouchableOpacity onPress={() => handleEmployeePress(employeeName)}>
+          <Text style={styles.employeeGroupHeader}>{employeeName?.name}</Text>
+        </TouchableOpacity>
         {shiftsToShow.map((shift, shiftIndex) =>
           renderShiftBlock(
             shift,
@@ -585,10 +635,11 @@ const RosterDetailViewV2 = ({ route }) => {
             isExpanded,
             () => toggleGroupExpansion(dayKey, employeeName?.name),
             employeeName?.name,
+            attributes,
           ),
         )}
 
-        {hasMultipleShifts && isExpanded && (
+        {shouldShowNewBlock(hasMultipleShifts, isExpanded) && (
           <View style={styles.additionalShifts}>
             {shifts
               .slice(1)
@@ -601,6 +652,7 @@ const RosterDetailViewV2 = ({ route }) => {
                   false,
                   null,
                   employeeName?.name,
+                  attributes,
                 ),
               )}
           </View>
@@ -612,12 +664,16 @@ const RosterDetailViewV2 = ({ route }) => {
   const renderDayColumn = (day, index) => {
     const dayKey = getDayKey(day.day);
     const employeeData = scheduleTesting[dayKey] || [];
+    const SHIFT_BLOCK_HEIGHT = vh * 23;
 
     return (
       <View key={index} style={styles.dayColumn}>
         <ScrollView
           style={styles.dayScrollView}
           showsVerticalScrollIndicator={false}
+          decelerationRate="fast" // Makes it snap quickly like reels
+          snapToAlignment="start" // Snaps to the start of each block
+          snapToInterval={SHIFT_BLOCK_HEIGHT} // Height of each shift block
           contentContainerStyle={styles.dayScrollContent}
         >
           {employeeData?.map((employeeGroup, groupIndex) =>
@@ -651,6 +707,13 @@ const RosterDetailViewV2 = ({ route }) => {
 
       {/* Date Header */}
       {renderDateHeader()}
+      {!scheduleTesting ? (
+        <ActivityIndicator
+          size="large"
+          color="#0000ff"
+          style={{ marginTop: 20 }}
+        />
+      ) : null}
 
       {/* Schedule Columns */}
       <View style={styles.scheduleContainer}>
@@ -762,10 +825,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dayScrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 70,
   },
   employeeGroup: {
-    marginBottom: 15,
+    // marginBottom: 15,
+    height: vh * 23,
   },
   employeeGroupHeader: {
     fontSize: 11,

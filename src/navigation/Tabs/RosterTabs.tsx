@@ -1,8 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RosterTransactionView from '../../screens/RosterTransactionView';
@@ -10,6 +16,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
 import RosterDetailViewV2 from '../../screens/RoasterDetailViewV2';
+import { StackScreen } from 'react-native-screens';
+import EmployeeList from '../../screens/EmployeeList';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import ProfileTab from '../../screens/ProfileTab';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -19,6 +30,19 @@ const RosterStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="rosterView" component={RosterView} />
       <Stack.Screen name="rosterDetailView" component={RosterDetailViewV2} />
+      {/* Add other screens here if needed */}
+    </Stack.Navigator>
+  );
+};
+
+const CustomerStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="customerList" component={EmployeeList} />
+      <Stack.Screen
+        name="rosterTransactionView"
+        component={RosterTransactionView}
+      />
       {/* Add other screens here if needed */}
     </Stack.Navigator>
   );
@@ -36,14 +60,14 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
   const tabIcons = {
     Home: 'home',
     'Add Customer': 'person-add',
-    Billing: 'receipt',
+    Profile: 'person-circle',
     Stats: 'bar-chart',
   };
 
   const tabColors = {
     Home: '#3B82F6',
     'Add Customer': '#10B981',
-    Billing: '#F59E0B',
+    Profile: '#F59E0B',
     Stats: '#8B5CF6',
   };
 
@@ -123,6 +147,17 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
 };
 
 export default function RoasterTabs() {
+  const token = useSelector(state => state.auth?.token);
+  console.log(token, 'Auth Navigator Token');
+  const navigation = useNavigation();
+  useEffect(() => {
+    if (!token) {
+      navigation.navigate('AuthStack', {
+        screen: 'CompanyUrl',
+      });
+    }
+  }, [token]);
+
   return (
     <>
       <Tab.Navigator
@@ -140,9 +175,16 @@ export default function RoasterTabs() {
         />
         <Tab.Screen
           name="Add Customer"
-          component={RosterTransactionView}
+          component={CustomerStack}
           options={{
-            tabBarLabel: 'Add Employee',
+            tabBarLabel: 'Employees',
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileTab}
+          options={{
+            tabBarLabel: 'Profile',
           }}
         />
       </Tab.Navigator>

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { verifyDomain } from '../api/auth';
+import { colors } from '../utils/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -57,8 +58,7 @@ export default function ModernLoginScreen({ navigation }) {
       Alert.alert('Error', 'Please enter your domain.');
       return;
     }
-    navigation.navigate('loginScreen', { domain: `https://${domain}` });
-    return;
+    // navigation.navigate('loginScreen', { domain: `https://${domain}` });
     setLoading(true);
 
     Animated.sequence([
@@ -105,7 +105,7 @@ export default function ModernLoginScreen({ navigation }) {
             {/* Logo Section */}
             <View style={styles.logoContainer}>
               <LinearGradient
-                colors={['#2563EB', '#4F46E5']}
+                colors={colors.btnGradiant}
                 style={styles.logoCircle}
               >
                 <Text style={styles.logoText}>R</Text>
@@ -157,7 +157,7 @@ export default function ModernLoginScreen({ navigation }) {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={['#2563EB', '#4F46E5']}
+                    colors={colors.btnGradiant}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={[styles.loginButton, loading && { opacity: 0.7 }]}
@@ -166,21 +166,13 @@ export default function ModernLoginScreen({ navigation }) {
                       <ActivityIndicator color="#fff" size="small" />
                     ) : (
                       <>
-                        <Text style={styles.loginButtonText}>Sign In</Text>
+                        <Text style={styles.loginButtonText}>Next</Text>
                         <Text style={styles.arrowIcon}>→</Text>
                       </>
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
-
-              {/* Sign Up Link */}
-              <View style={styles.signupContainer}>
-                <Text style={styles.signupText}>Don't have an account? </Text>
-                <TouchableOpacity>
-                  <Text style={styles.signupLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </Animated.View>
         </ScrollView>
@@ -224,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  titleHighlight: { color: '#2563EB' },
+  titleHighlight: { color: colors.primary },
   subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center' },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -252,7 +244,11 @@ const styles = StyleSheet.create({
   icon: { fontSize: 12 },
   input: { flex: 1, paddingVertical: 16, fontSize: 16, color: '#1F2937' },
   forgotPassword: { alignSelf: 'flex-end', marginBottom: 24 },
-  forgotPasswordText: { color: '#2563EB', fontSize: 14, fontWeight: '600' },
+  forgotPasswordText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   loginButton: {
     flexDirection: 'row',
     alignItems: 'center',

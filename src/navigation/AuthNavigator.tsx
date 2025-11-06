@@ -1,10 +1,11 @@
 // app/navigation/AuthNavigator.tsx
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import RoasterTabs from './Tabs/RosterTabs';
 import ModernLoginScreen from '../screens/CompanyURL';
 import LoginScreen from '../screens/LoginScreen';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 // import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
@@ -20,7 +21,7 @@ const AuthStackNavigator = () => {
 
 export default function AuthNavigator() {
   const token = useSelector(state => state.auth?.token);
-  console.log(token, 'Auth Navigator Token');
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
