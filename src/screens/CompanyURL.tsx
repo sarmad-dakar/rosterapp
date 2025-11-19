@@ -156,22 +156,22 @@ export default function ModernLoginScreen({ navigation }) {
                   onPress={handleLoginPress}
                   activeOpacity={0.9}
                   disabled={loading}
+                  style={[styles.loginButton, loading && { opacity: 0.7 }]}
                 >
                   <LinearGradient
                     colors={colors.btnGradiant}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={[styles.loginButton, loading && { opacity: 0.7 }]}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#fff" size="small" />
-                    ) : (
-                      <>
-                        <Text style={styles.loginButtonText}>Next</Text>
-                        <Text style={styles.arrowIcon}>→</Text>
-                      </>
-                    )}
-                  </LinearGradient>
+                    style={styles.loginButtonGradient}
+                  />
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>Next</Text>
+                      <Text style={styles.arrowIcon}>→</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -261,6 +261,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  loginButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
   },
   loginButtonText: {
     color: '#fff',

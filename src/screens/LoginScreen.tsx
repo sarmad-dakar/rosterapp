@@ -1,25 +1,23 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
+  ActivityIndicator,
   Animated,
-  Dimensions,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { icons } from '../assets';
-import { verifyLogin } from '../api/auth';
 import { useDispatch } from 'react-redux';
+import { verifyLogin } from '../api/auth';
+import { icons } from '../assets';
 import { login } from '../redux/slices/authSlice';
 import { colors } from '../utils/colors';
-const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation, route }) {
   const [email, setEmail] = useState('');
@@ -227,16 +225,16 @@ export default function LoginScreen({ navigation, route }) {
                   <TouchableOpacity
                     onPress={handleLoginPress}
                     activeOpacity={0.9}
+                    style={styles.loginButton}
                   >
                     <LinearGradient
                       colors={['#0d4483', '#1a5da8']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      style={styles.loginButton}
-                    >
-                      <Text style={styles.loginButtonText}>Sign In</Text>
-                      <Text style={styles.arrowIcon}>→</Text>
-                    </LinearGradient>
+                      style={styles.loginButtonGradient}
+                    />
+                    <Text style={styles.loginButtonText}>Sign In</Text>
+                    <Text style={styles.arrowIcon}>→</Text>
                   </TouchableOpacity>
                 </Animated.View>
               )}
@@ -385,6 +383,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  loginButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
   },
   loginButtonText: {
     color: '#FFFFFF',

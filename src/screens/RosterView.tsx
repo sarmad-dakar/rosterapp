@@ -148,16 +148,17 @@ export default function RosterView({ navigation }) {
   const dateInfo = formatDate(date);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Modern Header with Gradient */}
         <View style={styles.headerContainer}>
-          <LinearGradient
-            colors={['#0d4483', '#1a5da8', '#2563eb']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
-          >
+          <View style={styles.headerGradient}>
+            <LinearGradient
+              colors={['#0d4483', '#1a5da8', '#2563eb']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerGradientInner}
+            />
             <Animated.View
               style={[
                 styles.header,
@@ -172,7 +173,7 @@ export default function RosterView({ navigation }) {
                 Configure and load your roster data
               </Text>
             </Animated.View>
-          </LinearGradient>
+          </View>
         </View>
 
         <Animated.ScrollView
@@ -210,17 +211,16 @@ export default function RosterView({ navigation }) {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.dateGradient}
-              >
-                <View style={styles.dateLeft}>
-                  <Text style={styles.dateDay}>{dateInfo.day}</Text>
-                  <Text style={styles.dateMonth}>{dateInfo.month}</Text>
-                </View>
-                <View style={styles.dateDivider} />
-                <View style={styles.dateRight}>
-                  <Text style={styles.dateWeekday}>{dateInfo.weekday}</Text>
-                  <Text style={styles.dateYear}>{dateInfo.year}</Text>
-                </View>
-              </LinearGradient>
+              />
+              <View style={styles.dateLeft}>
+                <Text style={styles.dateDay}>{dateInfo.day}</Text>
+                <Text style={styles.dateMonth}>{dateInfo.month}</Text>
+              </View>
+              <View style={styles.dateDivider} />
+              <View style={styles.dateRight}>
+                <Text style={styles.dateWeekday}>{dateInfo.weekday}</Text>
+                <Text style={styles.dateYear}>{dateInfo.year}</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -273,13 +273,12 @@ export default function RosterView({ navigation }) {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.loadButtonText}>Load Roster Data</Text>
-              )}
-            </LinearGradient>
+            />
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loadButtonText}>Load Roster Data</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -300,7 +299,7 @@ export default function RosterView({ navigation }) {
           onSelect={setEmployeeCode}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -320,6 +319,15 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingTop: Platform.OS == 'ios' ? vh * 8 : vh * 7,
     paddingHorizontal: 24,
+  },
+  headerGradientInner: {
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    position: 'absolute',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   header: {
     gap: 1,
@@ -366,11 +374,16 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
-  },
-  dateGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
+  },
+  dateGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   dateLeft: {
     alignItems: 'center',
@@ -476,11 +489,16 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
-  },
-  buttonGradient: {
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   loadButtonText: {
     color: '#ffffff',
