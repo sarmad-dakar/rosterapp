@@ -319,11 +319,14 @@ const RosterDetailViewV2 = ({ route }) => {
   const [scheduleTesting, setScheduleTesting] = useState();
   const employeeData = route?.params?.employeeData;
   const rosterDate = route?.params?.selectedDate;
+  const [currentSelectedDate, setCurrentSelectedDate] = useState(
+    moment(rosterDate),
+  );
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
-    sortJson(employeeData);
+    sortJson(employeeData, rosterDate);
   }, [employeeData]);
 
   useEffect(() => {
@@ -332,7 +335,7 @@ const RosterDetailViewV2 = ({ route }) => {
     }
   }, [scheduleTesting]);
 
-  const sortJson = data => {
+  const sortJson = (data, calendarDate) => {
     let dummyWeekdays = [
       'monday',
       'tuesday',
@@ -351,12 +354,13 @@ const RosterDetailViewV2 = ({ route }) => {
       saturday: [],
       sunday: [],
     };
-    setDateFrom(moment(rosterDate));
-    setDateTo(moment(rosterDate).add(6, 'days'));
+    setCurrentSelectedDate(moment(calendarDate));
+    setDateFrom(moment(calendarDate));
+    setDateTo(moment(calendarDate).add(6, 'days'));
 
     let tempWeekDays = [];
     for (let index = 0; index < 7; index++) {
-      let currentDate = moment(rosterDate).add(index, 'days');
+      let currentDate = moment(calendarDate).add(index, 'days');
       let object = {
         day: currentDate.format('ddd'),
         date: currentDate.format('DD'),
@@ -468,6 +472,10 @@ const RosterDetailViewV2 = ({ route }) => {
       Sun: 'sunday',
     };
     return dayMap[day];
+  };
+  const handleNextDate = () => {
+    // console.log(currentSelectedDate, 'next date pressed');
+    sortJson(employeeData, currentSelectedDate?.add(7, 'days'));
   };
 
   const renderDateHeader = () => (
@@ -707,6 +715,14 @@ const RosterDetailViewV2 = ({ route }) => {
 
       {/* Date Header */}
       {renderDateHeader()}
+      <View style={styles.weekNavigationContainer}>
+        <TouchableOpacity onPress={() => console.log('last week press')}>
+          <Text>Previous Week</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleNextDate()}>
+          <Text>Next Week</Text>
+        </TouchableOpacity>
+      </View>
       {!scheduleTesting ? (
         <ActivityIndicator
           size="large"
@@ -926,6 +942,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  weekNavigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
   },
 });
 

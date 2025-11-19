@@ -1,14 +1,24 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import React, { useState, useRef } from 'react';
 import PagerView from 'react-native-pager-view';
 import InputField from '../InputField';
 import { vw } from '../../utils/units';
 import InputDropdown from '../InputDropdown';
 import CheckboxComponent from '../Checkbox';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePickerInput from '../DatePickerInput';
+import FormGenerator from '../FormGenerator';
 
-const PagerTabs = ({ tabs, tabForm, handlePopupPress }) => {
+const PagerTabs = ({ tabs, tabForm, handlePopupPress, setTabForm }) => {
   const [activeTab, setActiveTab] = useState(0);
   const pagerRef = useRef(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleTabPress = index => {
     setActiveTab(index);
@@ -17,6 +27,17 @@ const PagerTabs = ({ tabs, tabForm, handlePopupPress }) => {
 
   const handlePageSelected = e => {
     setActiveTab(e.nativeEvent.position);
+  };
+
+  const handleTabFormChange = (currentField, value, pageIndex) => {
+    let updatedTabForm = [...tabForm];
+    const currentPage = updatedTabForm[pageIndex];
+    const fieldObject = currentPage.find(
+      field => field.jquerySelectorID === currentField.jquerySelectorID,
+    );
+    fieldObject.defaultValue = value;
+    console.log(updatedTabForm, 'updatedTabForm');
+    setTabForm(updatedTabForm);
   };
 
   return (
@@ -54,60 +75,13 @@ const PagerTabs = ({ tabs, tabForm, handlePopupPress }) => {
         onPageSelected={handlePageSelected}
       >
         {tabForm.map((formFields, pageIndex) => (
-          <View key={pageIndex} style={styles.page}>
-            {formFields.map((field, fieldIndex) => {
-              if (field.fieldType === 'emptydiv') {
-                return <View key={fieldIndex} style={{ width: vw * 45 }} />;
-              }
-              if (field.fieldType === 'selectdropdown') {
-                return (
-                  <InputDropdown
-                    key={fieldIndex}
-                    label={field.displayName}
-                    placeholder={field.placeholder}
-                    inputStyle={{ width: vw * 42 }}
-                    dropdownData={field.fieldData}
-                    value={field.defaultValue}
-                  />
-                );
-              }
-              if (
-                field.fieldType === 'modal' ||
-                field.fieldType === 'modalinput'
-              ) {
-                return (
-                  <InputDropdown
-                    key={fieldIndex}
-                    label={field.displayName}
-                    placeholder={field.placeholder}
-                    inputStyle={{ width: vw * 42 }}
-                    defaultValue={field.defaultValue}
-                    ismodal={true}
-                    onPress={() => handlePopupPress(field.fieldData)}
-                  />
-                );
-              }
-              if (field.fieldType === 'checkbox') {
-                return (
-                  <CheckboxComponent
-                    key={fieldIndex}
-                    label={field.displayName}
-                  />
-                );
-              } else {
-                return (
-                  <InputField
-                    key={fieldIndex}
-                    label={field.displayName}
-                    placeholder={field.placeholder}
-                    inputStyle={{ width: vw * 42 }}
-
-                    // Add other props as needed based on your field structure
-                  />
-                );
-              }
-            })}
-          </View>
+          <FormGenerator
+            form={formFields}
+            handlePopupPress={handlePopupPress}
+            handleTabFormChange={handleTabFormChange}
+            pageStyle={styles.page}
+            pageIndex={pageIndex}
+          />
         ))}
       </PagerView>
     </View>
@@ -118,7 +92,7 @@ export default PagerTabs;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'red',
+    backgroundColor: '#fff',
     // height: 599,
   },
   tabHeader: {
@@ -165,7 +139,7 @@ const styles = StyleSheet.create({
   },
   page: {
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f8f8ff',
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',

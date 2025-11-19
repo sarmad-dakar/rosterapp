@@ -82,6 +82,7 @@ export default function ModernLoginScreen({ navigation }) {
         Alert.alert('Error', 'Invalid domain. Please try again.');
       }
     } catch (error) {
+      console.log(error);
       Alert.alert('Error', 'Domain verification failed. Please try again.');
     } finally {
       setLoading(false);

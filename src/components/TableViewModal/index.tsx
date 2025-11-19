@@ -16,16 +16,19 @@ interface TableViewModalProps {
   tableData: TableData[];
   title?: string;
   onClose?: () => void;
+  onChange?: (selectedRows: TableData[]) => void;
 }
 
 const TableViewModal: React.FC<TableViewModalProps> = ({
   tableData,
   title = 'Select a PayGroup',
   onClose,
+  onChange,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   // Extract column names from first object
   const columns = useMemo(() => {
@@ -60,16 +63,49 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
     return key.charAt(0).toUpperCase() + key.slice(1);
   };
 
+  // Toggle row selection
+  const toggleRowSelection = (rowIndex: number) => {
+    const newSelectedRows = new Set(selectedRows);
+    if (newSelectedRows.has(rowIndex)) {
+      newSelectedRows.delete(rowIndex);
+    } else {
+      newSelectedRows.add(rowIndex);
+    }
+    setSelectedRows(newSelectedRows);
+  };
+
+  // Handle done button press
+  const handleDone = () => {
+    if (onChange) {
+      const selected = Array.from(selectedRows).map(index => tableData[index]);
+      onChange(selected);
+    }
+  };
+
+  // Get original index for a filtered row
+  const getOriginalIndex = (paginatedIndex: number): number => {
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const filteredRow = filteredData[startIndex + paginatedIndex];
+    return tableData.findIndex(row => row === filteredRow);
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        {onClose && (
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>×</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerButtons}>
+          {selectedRows.size > 0 && (
+            <Text style={styles.selectedCount}>
+              {selectedRows.size} selected
+            </Text>
+          )}
+          {onClose && (
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Controls */}
@@ -98,6 +134,11 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
         <View style={styles.table}>
           {/* Table Header */}
           <View style={styles.tableRow}>
+            {onChange && (
+              <View style={[styles.tableHeaderCell, styles.checkboxColumn]}>
+                <Text style={styles.tableHeaderText}>Select</Text>
+              </View>
+            )}
             {columns.map((column, index) => (
               <View
                 key={column}
@@ -114,29 +155,50 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
           </View>
 
           {/* Table Body */}
-          {paginatedData.map((row, rowIndex) => (
-            <View
-              key={rowIndex}
-              style={[
-                styles.tableRow,
-                rowIndex % 2 === 0 ? styles.evenRow : styles.oddRow,
-              ]}
-            >
-              {columns.map((column, colIndex) => (
-                <View
-                  key={`${rowIndex}-${column}`}
-                  style={[
-                    styles.tableCell,
-                    colIndex === 0 && styles.firstColumn,
-                  ]}
-                >
-                  <Text style={styles.tableCellText}>
-                    {String(row[column])}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ))}
+          {paginatedData.map((row, rowIndex) => {
+            const originalIndex = getOriginalIndex(rowIndex);
+            const isSelected = selectedRows.has(originalIndex);
+
+            return (
+              <View
+                key={rowIndex}
+                style={[
+                  styles.tableRow,
+                  rowIndex % 2 === 0 ? styles.evenRow : styles.oddRow,
+                  isSelected && styles.selectedRow,
+                ]}
+              >
+                {onChange && (
+                  <TouchableOpacity
+                    style={[styles.tableCell, styles.checkboxColumn]}
+                    onPress={() => toggleRowSelection(originalIndex)}
+                  >
+                    <View
+                      style={[
+                        styles.checkbox,
+                        isSelected && styles.checkboxSelected,
+                      ]}
+                    >
+                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {columns.map((column, colIndex) => (
+                  <View
+                    key={`${rowIndex}-${column}`}
+                    style={[
+                      styles.tableCell,
+                      colIndex === 0 && styles.firstColumn,
+                    ]}
+                  >
+                    <Text style={styles.tableCellText}>
+                      {String(row[column])}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -176,6 +238,22 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Done Button */}
+      {onChange && (
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            style={[
+              styles.doneButton,
+              selectedRows.size === 0 && styles.doneButtonDisabled,
+            ]}
+            onPress={handleDone}
+            disabled={selectedRows.size === 0}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -201,6 +279,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#1f2937',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectedCount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#2563eb',
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   closeButton: {
     width: 36,
@@ -296,11 +388,38 @@ const styles = StyleSheet.create({
   firstColumn: {
     minWidth: 150,
   },
+  checkboxColumn: {
+    minWidth: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxSelected: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   evenRow: {
     backgroundColor: '#f9fafb',
   },
   oddRow: {
     backgroundColor: '#fff',
+  },
+  selectedRow: {
+    backgroundColor: '#eff6ff',
   },
   footer: {
     flexDirection: 'row',
@@ -349,5 +468,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  actionContainer: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    alignItems: 'flex-end',
+  },
+  doneButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 6,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  doneButtonDisabled: {
+    backgroundColor: '#93c5fd',
+    opacity: 0.5,
+  },
+  doneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

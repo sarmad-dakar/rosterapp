@@ -12,6 +12,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     borderRadius: vh * 0.82,
+    backgroundColor: 'white',
   },
   smallContainer: { height: 35, marginVertical: 5, borderRadius: 7 },
   textContainer: {

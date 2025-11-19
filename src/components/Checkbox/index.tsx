@@ -1,13 +1,12 @@
 import { Pressable, StyleSheet, Text, View, Animated } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 
-const CheckboxComponent = ({ label }) => {
-  const [checked, setChecked] = useState(false);
+const CheckboxComponent = ({ label, onValueChange, value }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const checkAnim = useRef(new Animated.Value(0)).current;
 
   const onChange = (newValue: boolean) => {
-    setChecked(newValue);
+    onValueChange(newValue);
     // Scale animation for press feedback
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -26,12 +25,12 @@ const CheckboxComponent = ({ label }) => {
   useEffect(() => {
     // Check mark animation
     Animated.spring(checkAnim, {
-      toValue: checked ? 1 : 0,
+      toValue: value ? 1 : 0,
       tension: 100,
       friction: 7,
       useNativeDriver: true,
     }).start();
-  }, [checked]);
+  }, [value]);
 
   const checkScale = checkAnim.interpolate({
     inputRange: [0, 1],
@@ -46,7 +45,7 @@ const CheckboxComponent = ({ label }) => {
   return (
     <Pressable
       style={styles.container}
-      onPress={() => onChange(!checked)}
+      onPress={() => onChange(!value)}
       hitSlop={12}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -54,12 +53,12 @@ const CheckboxComponent = ({ label }) => {
           style={[
             styles.checkboxBase,
             {
-              backgroundColor: checked ? '#6366f1' : '#f3f4f6',
-              borderColor: checked ? '#6366f1' : '#d1d5db',
+              backgroundColor: value ? '#6366f1' : '#f3f4f6',
+              borderColor: value ? '#6366f1' : '#d1d5db',
             },
           ]}
         >
-          {checked && (
+          {value && (
             <Animated.View
               style={[
                 styles.checkmark,

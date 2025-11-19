@@ -8,6 +8,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 20000,
 });
 
 // Add a request interceptor
@@ -30,11 +31,13 @@ axiosInstance.interceptors.response.use(
   },
   async error => {
     // Handle response error (e.g., 4xx, 5xx)
-    console.log(JSON.stringify(error), 'error');
+    console.log(error?.request, 'request error');
+    await store.dispatch(logout());
+
     if (error.response) {
       // You can access the response status code, data, headers, etc.
       const { status, data } = error.response;
-      console.log(data, 'error');
+      console.log(data, 'error in axios config');
       // Handle specific error codes as needed
       if (status === 401) {
         await store.dispatch(logout());

@@ -7,6 +7,7 @@ const API_ENDPOINTS = {
   TABLE_DATA: 'DynamicAPI/GetTableData',
   GET_ROSTER_EMPLOYEES: 'EmployeeSetupAPI/GetEmployees',
   GET_ROSTER_SCHEDULES: 'RoasterAPI/GetRosterEntriesData',
+  GET_DYNAMIC_FORM: 'DynamicForm/details',
 };
 
 export { API_ENDPOINTS };

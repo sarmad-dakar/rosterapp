@@ -126,7 +126,7 @@ const InputDropdown: FC<Props> = props => {
     if (props.onDropdownSelect) {
       props.onDropdownSelect(item);
     }
-
+    props?.onChange(item);
     setDropdownVisible(false);
   };
 
