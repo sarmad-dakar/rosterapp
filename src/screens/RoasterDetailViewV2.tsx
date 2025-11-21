@@ -752,10 +752,9 @@ const RosterDetailViewV2 = ({ route }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.navButtonGradient}
-          >
-            <Icon name="chevron-left" size={16} color="#fff" />
-            <Text style={styles.navButtonText}>Previous</Text>
-          </LinearGradient>
+          />
+          <Icon name="chevron-left" size={16} color="#fff" />
+          <Text style={styles.navButtonText}>Previous</Text>
         </TouchableOpacity>
 
         {/* Next Week Button */}
@@ -769,10 +768,10 @@ const RosterDetailViewV2 = ({ route }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.navButtonGradient}
-          >
-            <Text style={styles.navButtonText}>Next</Text>
-            <Icon name="chevron-right" size={16} color="#fff" />
-          </LinearGradient>
+          />
+
+          <Text style={styles.navButtonText}>Next</Text>
+          <Icon name="chevron-right" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
       {loadingState ? (
@@ -1025,14 +1024,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
-  },
-  navButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
     gap: 4,
+  },
+  navButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 8,
   },
   navButtonText: {
     color: '#fff',
