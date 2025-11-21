@@ -12,6 +12,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { verifyDomain } from '../api/auth';
@@ -42,13 +44,16 @@ export default function ModernLoginScreen({ navigation }) {
     Animated.spring(emailScale, {
       toValue: 1.02,
       useNativeDriver: true,
+      friction: 8,
+      tension: 100,
     }).start();
   };
 
   const handleEmailBlur = () => {
     setEmailFocused(false);
-    Animated.spring(emailScale, {
+    Animated.timing(emailScale, {
       toValue: 1,
+      duration: 200,
       useNativeDriver: true,
     }).start();
   };
@@ -89,95 +94,208 @@ export default function ModernLoginScreen({ navigation }) {
     }
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
     <LinearGradient
       colors={['#EFF6FF', '#EDE9FE', '#FAE8FF']}
       style={styles.container}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.keyboardView}
+          keyboardVerticalOffset={0}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={16}
+            removeClippedSubviews={false}
+          >
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+              <View>
+                <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+                  {/* Logo Section */}
+                  <View style={styles.logoContainer}>
+                    <LinearGradient
+                      colors={colors.btnGradiant}
+                      style={styles.logoCircle}
+                    >
+                      <Text style={styles.logoText}>R</Text>
+                    </LinearGradient>
+                    <Text style={styles.title}>
+                      Welcome to{' '}
+                      <Text style={styles.titleHighlight}>Roster</Text>
+                    </Text>
+                    <Text style={styles.subtitle}>Sign in to continue</Text>
+                  </View>
+
+                  {/* Login Card */}
+                  <View style={styles.card}>
+                    {/* Domain Input */}
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Domain</Text>
+                      <Animated.View
+                        style={[
+                          styles.inputWrapper,
+                          emailFocused && styles.inputWrapperFocused,
+                          { transform: [{ scale: emailScale }] },
+                        ]}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Text style={styles.icon}>https://</Text>
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          value={domain}
+                          onChangeText={setDomain}
+                          onFocus={handleEmailFocus}
+                          onBlur={handleEmailBlur}
+                          placeholder="Enter your domain"
+                          placeholderTextColor="#9CA3AF"
+                          autoCapitalize="none"
+                        />
+                      </Animated.View>
+                    </View>
+
+                    {/* Forgot Password */}
+                    <TouchableOpacity style={styles.forgotPassword}>
+                      <Text style={styles.forgotPasswordText}>
+                        Forgot Password?
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Login Button */}
+                    <Animated.View
+                      style={{ transform: [{ scale: buttonScale }] }}
+                    >
+                      <TouchableOpacity
+                        onPress={handleLoginPress}
+                        activeOpacity={0.9}
+                        disabled={loading}
+                        style={[
+                          styles.loginButton,
+                          loading && { opacity: 0.7 },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={colors.btnGradiant}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.loginButtonGradient}
+                        />
+                        {loading ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <>
+                            <Text style={styles.loginButtonText}>Next</Text>
+                            <Text style={styles.arrowIcon}>→</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </Animated.View>
+                  </View>
+                </Animated.View>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      ) : (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          removeClippedSubviews={false}
         >
-          <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-            {/* Logo Section */}
-            <View style={styles.logoContainer}>
-              <LinearGradient
-                colors={colors.btnGradiant}
-                style={styles.logoCircle}
-              >
-                <Text style={styles.logoText}>R</Text>
-              </LinearGradient>
-              <Text style={styles.title}>
-                Welcome to <Text style={styles.titleHighlight}>Roster</Text>
-              </Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
-            </View>
-
-            {/* Login Card */}
-            <View style={styles.card}>
-              {/* Domain Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Domain</Text>
-                <Animated.View
-                  style={[
-                    styles.inputWrapper,
-                    emailFocused && styles.inputWrapperFocused,
-                    { transform: [{ scale: emailScale }] },
-                  ]}
-                >
-                  <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>https://</Text>
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    value={domain}
-                    onChangeText={setDomain}
-                    onFocus={handleEmailFocus}
-                    onBlur={handleEmailBlur}
-                    placeholder="Enter your domain"
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="none"
-                  />
-                </Animated.View>
-              </View>
-
-              {/* Forgot Password */}
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              {/* Login Button */}
-              <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                <TouchableOpacity
-                  onPress={handleLoginPress}
-                  activeOpacity={0.9}
-                  disabled={loading}
-                  style={[styles.loginButton, loading && { opacity: 0.7 }]}
-                >
+          <TouchableWithoutFeedback onPress={dismissKeyboard}>
+            <View>
+              <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+                {/* Logo Section */}
+                <View style={styles.logoContainer}>
                   <LinearGradient
                     colors={colors.btnGradiant}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.loginButtonGradient}
-                  />
-                  {loading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <>
-                      <Text style={styles.loginButtonText}>Next</Text>
-                      <Text style={styles.arrowIcon}>→</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                    style={styles.logoCircle}
+                  >
+                    <Text style={styles.logoText}>R</Text>
+                  </LinearGradient>
+                  <Text style={styles.title}>
+                    Welcome to <Text style={styles.titleHighlight}>Roster</Text>
+                  </Text>
+                  <Text style={styles.subtitle}>Sign in to continue</Text>
+                </View>
+
+                {/* Login Card */}
+                <View style={styles.card}>
+                  {/* Domain Input */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Domain</Text>
+                    <Animated.View
+                      style={[
+                        styles.inputWrapper,
+                        emailFocused && styles.inputWrapperFocused,
+                        { transform: [{ scale: emailScale }] },
+                      ]}
+                    >
+                      <View style={styles.iconContainer}>
+                        <Text style={styles.icon}>https://</Text>
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        value={domain}
+                        onChangeText={setDomain}
+                        onFocus={handleEmailFocus}
+                        onBlur={handleEmailBlur}
+                        placeholder="Enter your domain"
+                        placeholderTextColor="#9CA3AF"
+                        autoCapitalize="none"
+                      />
+                    </Animated.View>
+                  </View>
+
+                  {/* Forgot Password */}
+                  <TouchableOpacity style={styles.forgotPassword}>
+                    <Text style={styles.forgotPasswordText}>
+                      Forgot Password?
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Login Button */}
+                  <Animated.View
+                    style={{ transform: [{ scale: buttonScale }] }}
+                  >
+                    <TouchableOpacity
+                      onPress={handleLoginPress}
+                      activeOpacity={0.9}
+                      disabled={loading}
+                      style={[styles.loginButton, loading && { opacity: 0.7 }]}
+                    >
+                      <LinearGradient
+                        colors={colors.btnGradiant}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.loginButtonGradient}
+                      />
+                      {loading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                      ) : (
+                        <>
+                          <Text style={styles.loginButtonText}>Next</Text>
+                          <Text style={styles.arrowIcon}>→</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                </View>
               </Animated.View>
             </View>
-          </Animated.View>
+          </TouchableWithoutFeedback>
         </ScrollView>
-      </KeyboardAvoidingView>
+      )}
 
       {/* Loader Overlay */}
       {loading && (
@@ -193,7 +311,7 @@ export default function ModernLoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardView: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 60 },
   content: { width: '100%', maxWidth: 400, alignSelf: 'center' },
   logoContainer: { alignItems: 'center', marginBottom: 40 },
   logoCircle: {

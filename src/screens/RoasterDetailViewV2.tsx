@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
 import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
 import { getRosterSchedules } from '../api/rosterSchedule';
 import moment from 'moment';
 import { vh } from '../utils/units';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from '../utils/colors';
 
 // const weekDays = [
 //   { day: 'Mon', date: 21, month: 'Jul' },
@@ -326,7 +328,7 @@ const RosterDetailViewV2 = ({ route }) => {
   const insets = useSafeAreaInsets();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-
+  const [loadingState, setLoadingState] = useState(false);
   useEffect(() => {
     sortJson(employeeData, rosterDate);
   }, [employeeData]);
@@ -338,6 +340,8 @@ const RosterDetailViewV2 = ({ route }) => {
   }, [scheduleTesting]);
 
   const sortJson = (data, calendarDate) => {
+    setLoadingState(true);
+
     let dummyWeekdays = [
       'monday',
       'tuesday',
@@ -402,17 +406,22 @@ const RosterDetailViewV2 = ({ route }) => {
   };
 
   const fetchScheduleData = async basicObject => {
-    const apiObject = {
-      dateFrom: moment(rosterDate).format('YYYY-MM-DD'),
-      dateTo: moment(rosterDate).add(6, 'days').format('YYYY-MM-DD'),
-      employeeCodes: employeeData.map(emp => emp.code),
-      pageNo: 1,
-      isDetailed: 1,
-    };
-    console.log(apiObject, 'scheduled data api object');
-    const response = await getRosterSchedules(apiObject);
-    console.log(response, 'Schedule Data response');
-    sortScheduleData(response?.data, basicObject);
+    try {
+      const apiObject = {
+        dateFrom: moment(rosterDate).format('YYYY-MM-DD'),
+        dateTo: moment(rosterDate).add(6, 'days').format('YYYY-MM-DD'),
+        employeeCodes: employeeData.map(emp => emp.code),
+        pageNo: 1,
+        isDetailed: 1,
+      };
+      console.log(apiObject, 'scheduled data api object');
+      const response = await getRosterSchedules(apiObject);
+      setLoadingState(false);
+      console.log(response, 'Schedule Data response');
+      sortScheduleData(response?.data, basicObject);
+    } catch (error) {
+      setLoadingState(false);
+    }
   };
 
   const sortScheduleData = (data, basicObject) => {
@@ -478,6 +487,11 @@ const RosterDetailViewV2 = ({ route }) => {
   const handleNextDate = () => {
     // console.log(currentSelectedDate, 'next date pressed');
     sortJson(employeeData, currentSelectedDate?.add(7, 'days'));
+  };
+
+  const handlePreviousDate = () => {
+    // console.log(currentSelectedDate, 'previous date pressed');
+    sortJson(employeeData, currentSelectedDate?.subtract(7, 'days'));
   };
 
   const renderDateHeader = () => (
@@ -634,7 +648,9 @@ const RosterDetailViewV2 = ({ route }) => {
         ]}
       >
         <TouchableOpacity onPress={() => handleEmployeePress(employeeName)}>
-          <Text style={styles.employeeGroupHeader}>{employeeName?.name}</Text>
+          <Text numberOfLines={1} style={styles.employeeGroupHeader}>
+            {employeeName?.name}
+          </Text>
         </TouchableOpacity>
         {shiftsToShow.map((shift, shiftIndex) =>
           renderShiftBlock(
@@ -725,27 +741,69 @@ const RosterDetailViewV2 = ({ route }) => {
       {/* Date Header */}
       {renderDateHeader()}
       <View style={styles.weekNavigationContainer}>
-        <TouchableOpacity onPress={() => console.log('last week press')}>
-          <Text>Previous Week</Text>
+        {/* Previous Week Button */}
+        <TouchableOpacity
+          onPress={() => handlePreviousDate()}
+          activeOpacity={0.8}
+          style={styles.navButton}
+        >
+          <LinearGradient
+            colors={colors.btnGradiant}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.navButtonGradient}
+          >
+            <Icon name="chevron-left" size={16} color="#fff" />
+            <Text style={styles.navButtonText}>Previous</Text>
+          </LinearGradient>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleNextDate()}>
-          <Text>Next Week</Text>
+
+        {/* Next Week Button */}
+        <TouchableOpacity
+          onPress={() => handleNextDate()}
+          activeOpacity={0.8}
+          style={styles.navButton}
+        >
+          <LinearGradient
+            colors={colors.btnGradiant}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.navButtonGradient}
+          >
+            <Text style={styles.navButtonText}>Next</Text>
+            <Icon name="chevron-right" size={16} color="#fff" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
-      {!scheduleTesting ? (
+      {loadingState ? (
         <ActivityIndicator
           size="large"
           color="#0000ff"
           style={{ marginTop: 20 }}
         />
-      ) : null}
+      ) : !employeeData || employeeData.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <View style={styles.emptyStateContent}>
+            <Icon name="event-busy" size={64} color="#94a3b8" />
+            <Text style={styles.emptyStateTitle}>No Records Found</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              There are no employees scheduled for this roster.
+            </Text>
+            <Text style={styles.emptyStateHint}>
+              Please select employees to view their schedule.
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.scheduleContainer}>
+          {scheduleTesting
+            ? weekDays.map((day, index) => renderDayColumn(day, index))
+            : null}
+        </View>
+      )}
 
       {/* Schedule Columns */}
-      <View style={styles.scheduleContainer}>
-        {scheduleTesting
-          ? weekDays.map((day, index) => renderDayColumn(day, index))
-          : null}
-      </View>
+
       <EmployeeInfoPopup ref={employeeInfoRef} />
     </View>
   );
@@ -955,7 +1013,64 @@ const styles = StyleSheet.create({
   weekNavigationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 5,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  navButton: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  navButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  navButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyStateContent: {
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  emptyStateTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 20,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  emptyStateHint: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
   },
 });
 

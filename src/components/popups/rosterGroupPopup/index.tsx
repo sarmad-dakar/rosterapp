@@ -47,6 +47,7 @@ const MOCK_ROSTERS_GROUPS: RosterGroup[] = [
 type Props = {
   reference?: RefObject<PopupRefProps>;
   onSelect?: (selectedGroups: RosterGroup[]) => void;
+  initialSelected?: RosterGroup[];
 };
 
 const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
@@ -119,12 +120,35 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
     ]).start(() => setVisible(false));
   };
 
-  const show = () => setVisible(true);
-  const hide = () => setVisible(false);
+  const show = (preSelected?: RosterGroup[]) => {
+    if (preSelected && preSelected.length > 0) {
+      setSelectedGroups(preSelected);
+    } else if (props.initialSelected && props.initialSelected.length > 0) {
+      setSelectedGroups(props.initialSelected);
+    }
+    setVisible(true);
+  };
+  
+  const hide = () => {
+    setVisible(false);
+    setSearchText(''); // Clear search text
+  };
 
   const handleSelect = () => {
     props.onSelect?.(selectedGroups);
-    hide();
+    setSearchText(''); // Clear search
+    setVisible(false);
+  };
+  
+  const handleCancel = () => {
+    setSelectedGroups([]); // Reset selection on cancel
+    setSearchText(''); // Clear search
+    setVisible(false);
+  };
+
+  const unselectAll = () => {
+    setSelectedGroups([]);
+    props.onSelect?.([]); // Immediately notify parent
   };
 
   const clearSearch = () => {
@@ -226,7 +250,7 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
         <TouchableOpacity
           style={styles.backdropTouchable}
           activeOpacity={1}
-          onPress={slideDown}
+          onPress={handleCancel}
         />
       </Animated.View>
 
@@ -250,7 +274,7 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
             </View>
           </View>
           <TouchableOpacity
-            onPress={slideDown}
+            onPress={handleCancel}
             style={styles.closeButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -299,6 +323,14 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
               <Text style={styles.selectedText}>
                 {selectedGroups.length} selected
               </Text>
+              <TouchableOpacity
+                onPress={unselectAll}
+                style={styles.unselectButton}
+                activeOpacity={0.7}
+              >
+                <Icon name="clear" size={14} color="#ef4444" />
+                <Text style={styles.unselectButtonText}>Unselect All</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -321,7 +353,7 @@ const RosterGroupPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={slideDown}
+            onPress={handleCancel}
             activeOpacity={0.7}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -479,6 +511,21 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 14,
     color: '#10b981',
+    fontWeight: '600',
+  },
+  unselectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 8,
+    gap: 4,
+  },
+  unselectButtonText: {
+    fontSize: 11,
+    color: '#ef4444',
     fontWeight: '600',
   },
   tableContainer: {

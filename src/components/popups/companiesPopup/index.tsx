@@ -39,6 +39,7 @@ const MOCK_COMPANIES: Company[] = [
 type Props = {
   reference?: RefObject<PopupRefProps>;
   onSelect?: (selectedCompanies: Company[]) => void;
+  initialSelected?: Company[];
 };
 
 const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
@@ -111,12 +112,35 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
     ]).start(() => setVisible(false));
   };
 
-  const show = () => setVisible(true);
-  const hide = () => setVisible(false);
+  const show = (preSelected?: Company[]) => {
+    if (preSelected && preSelected.length > 0) {
+      setSelectedCompanies(preSelected);
+    } else if (props.initialSelected && props.initialSelected.length > 0) {
+      setSelectedCompanies(props.initialSelected);
+    }
+    setVisible(true);
+  };
+  
+  const hide = () => {
+    setVisible(false);
+    setSearchText(''); // Clear search text
+  };
 
   const handleSelect = () => {
     props.onSelect?.(selectedCompanies);
-    hide();
+    setSearchText(''); // Clear search
+    setVisible(false);
+  };
+  
+  const handleCancel = () => {
+    setSelectedCompanies([]); // Reset selection on cancel
+    setSearchText(''); // Clear search
+    setVisible(false);
+  };
+
+  const unselectAll = () => {
+    setSelectedCompanies([]);
+    props.onSelect?.([]); // Immediately notify parent
   };
 
   const clearSearch = () => {
@@ -183,7 +207,7 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
         <TouchableOpacity
           style={styles.backdropTouchable}
           activeOpacity={1}
-          onPress={slideDown}
+          onPress={handleCancel}
         />
       </Animated.View>
 
@@ -207,7 +231,7 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
             </View>
           </View>
           <TouchableOpacity
-            onPress={slideDown}
+            onPress={handleCancel}
             style={styles.closeButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -242,15 +266,31 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
           </View>
         </View>
 
-        {/* Results count */}
-        {searchText.length > 0 && (
-          <View style={styles.resultsInfo}>
+        {/* Results and Selection Info */}
+        <View style={styles.infoContainer}>
+          {searchText.length > 0 && (
             <Text style={styles.resultsText}>
               {filteredData.length} result{filteredData.length !== 1 ? 's' : ''}{' '}
               found
             </Text>
-          </View>
-        )}
+          )}
+          {selectedCompanies.length > 0 && (
+            <View style={styles.selectedInfo}>
+              <Icon name="check-circle" size={16} color="#10b981" />
+              <Text style={styles.selectedText}>
+                {selectedCompanies.length} selected
+              </Text>
+              <TouchableOpacity
+                onPress={unselectAll}
+                style={styles.unselectButton}
+                activeOpacity={0.7}
+              >
+                <Icon name="clear" size={14} color="#ef4444" />
+                <Text style={styles.unselectButtonText}>Unselect All</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
         {/* List */}
         <View style={styles.listContainer}>
@@ -268,7 +308,7 @@ const CompaniesPopup = forwardRef<PopupRefProps, Props>((props, ref) => {
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={slideDown}
+            onPress={handleCancel}
             activeOpacity={0.7}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -406,14 +446,42 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 8,
   },
-  resultsInfo: {
+  infoContainer: {
     paddingHorizontal: 20,
     marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   resultsText: {
     fontSize: 14,
     color: '#64748b',
     fontWeight: '500',
+  },
+  selectedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  selectedText: {
+    fontSize: 14,
+    color: '#10b981',
+    fontWeight: '600',
+  },
+  unselectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 8,
+    gap: 4,
+  },
+  unselectButtonText: {
+    fontSize: 11,
+    color: '#ef4444',
+    fontWeight: '600',
   },
   listContainer: {
     flex: 1,
