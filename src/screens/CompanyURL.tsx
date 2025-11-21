@@ -18,6 +18,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { verifyDomain } from '../api/auth';
 import { colors } from '../utils/colors';
+import { vh } from '../utils/units';
 
 const { width, height } = Dimensions.get('window');
 
@@ -311,7 +312,7 @@ export default function ModernLoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardView: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 60 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingTop: vh * 15 },
   content: { width: '100%', maxWidth: 400, alignSelf: 'center' },
   logoContainer: { alignItems: 'center', marginBottom: 40 },
   logoCircle: {
