@@ -25,6 +25,7 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
   onClose,
   onChange,
 }) => {
+  console.log('tableData', tableData);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -51,10 +52,10 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * entriesPerPage;
     const endIndex = startIndex + entriesPerPage;
-    return filteredData.slice(startIndex, endIndex);
+    return filteredData?.slice(startIndex, endIndex);
   }, [filteredData, currentPage, entriesPerPage]);
 
-  const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+  const totalPages = Math.ceil(filteredData?.length / entriesPerPage);
   const startEntry = (currentPage - 1) * entriesPerPage + 1;
   const endEntry = Math.min(currentPage * entriesPerPage, filteredData.length);
 

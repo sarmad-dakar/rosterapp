@@ -111,7 +111,6 @@ export default function LoginScreen({ navigation, route }) {
       setLoading(false);
       if (response?.data) {
         dispatch(login(response.data));
-        navigation.navigate('Home');
       }
       console.log(response, 'login response');
     } catch (error) {

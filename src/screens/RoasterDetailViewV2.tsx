@@ -14,6 +14,7 @@ import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
 import { getRosterSchedules } from '../api/rosterSchedule';
 import moment from 'moment';
 import { vh } from '../utils/units';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // const weekDays = [
 //   { day: 'Mon', date: 21, month: 'Jul' },
@@ -322,6 +323,7 @@ const RosterDetailViewV2 = ({ route }) => {
   const [currentSelectedDate, setCurrentSelectedDate] = useState(
     moment(rosterDate),
   );
+  const insets = useSafeAreaInsets();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -433,7 +435,7 @@ const RosterDetailViewV2 = ({ route }) => {
 
           scheduleObject[moment(shift.date).format('dddd').toLowerCase()][
             shiftObjectIndex
-          ]['attributes'] = {
+          ].attributes = {
             backColor: shift?.backColor,
             date: shift?.date,
             foreColor: shift?.foreColor,
@@ -693,7 +695,14 @@ const RosterDetailViewV2 = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+        },
+      ]}
+    >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       <View style={styles.toggleContainer}>
@@ -738,7 +747,7 @@ const RosterDetailViewV2 = ({ route }) => {
           : null}
       </View>
       <EmployeeInfoPopup ref={employeeInfoRef} />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -894,7 +903,7 @@ const styles = StyleSheet.create({
   },
   shiftTime: {
     color: '#222',
-    fontSize: 10,
+    fontSize: vh * 1,
     fontWeight: '800',
     marginBottom: 6,
   },

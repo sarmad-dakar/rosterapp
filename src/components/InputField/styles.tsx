@@ -55,6 +55,6 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: vh * 1.52,
     marginTop: 10,
-    marginBottom: Platform.OS === 'ios' ? vh * 2 : 3,
+    marginBottom: 3,
   },
 });

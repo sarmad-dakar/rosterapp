@@ -1,19 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   SafeAreaView,
+  ScrollView,
   StatusBar,
-  Dimensions,
-  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
-
-const { width } = Dimensions.get('window');
 
 const weekDays = [
   { day: 'Mon', date: 21, month: 'Jul' },

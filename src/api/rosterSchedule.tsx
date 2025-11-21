@@ -14,12 +14,13 @@ const getRosterSchedules = data => {
   return axiosInstance.post(API_ENDPOINTS.GET_ROSTER_SCHEDULES, data);
 };
 
-const getDynamicForm = data => {
+const getDynamicForm = (data, cancelToken) => {
   return axios.post(
     'https://rosterapi.dakarhr.com/api/DynamicForm/details',
     data,
     {
       timeout: 40000,
+      cancelToken: cancelToken.token,
     },
   );
 };

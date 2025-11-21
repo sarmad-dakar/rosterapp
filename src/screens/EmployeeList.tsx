@@ -32,7 +32,10 @@ const EmployeeList = ({ navigation }) => {
 
   const handleEdit = (code: string) => {
     console.log(`Edit employee: ${code}`);
-    navigation.navigate('rosterTransactionView', { employeeCode: code });
+    navigation.navigate('rosterTransactionView', {
+      employeeCode: code,
+      title: 'Employee Career',
+    });
     // Add your edit navigation logic here
   };
 

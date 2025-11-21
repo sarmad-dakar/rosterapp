@@ -6,6 +6,7 @@ import ModernLoginScreen from '../screens/CompanyURL';
 import LoginScreen from '../screens/LoginScreen';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
+import RosterTransactionView from '../screens/RosterTransactionView';
 // import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
@@ -27,8 +28,20 @@ export default function AuthNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token == null ? (
           <Stack.Screen name="AuthStack" component={AuthStackNavigator} />
-        ) : null}
-        <Stack.Screen name="Home" component={RoasterTabs} />
+        ) : (
+          <>
+            <Stack.Screen name="Home" component={RoasterTabs} />
+            <Stack.Screen
+              name="rosterTransactionView"
+              component={RosterTransactionView}
+              options={props => ({
+                headerShown: true,
+                headerBackTitle: '',
+                title: props.route.params?.title,
+              })}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

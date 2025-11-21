@@ -53,8 +53,8 @@ const CheckboxComponent = ({ label, onValueChange, value }) => {
           style={[
             styles.checkboxBase,
             {
-              backgroundColor: value ? '#6366f1' : '#f3f4f6',
-              borderColor: value ? '#6366f1' : '#d1d5db',
+              backgroundColor: value ? '#0d4483' : '#f3f4f6',
+              borderColor: value ? '#0d4483' : '#d1d5db',
             },
           ]}
         >

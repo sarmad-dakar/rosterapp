@@ -35,6 +35,7 @@ export default function RosterView({ navigation }) {
   const [rosterGroupData, setRosterGroupData] = useState([]);
   const allEmployees = useSelector(state => state.auth?.employees);
   const [loading, setLoading] = useState(false);
+  const [dataFetching, setDataFetching] = useState(true);
   const dispatch = useDispatch();
 
   const companyRef = useRef<any>(null);
@@ -107,6 +108,7 @@ export default function RosterView({ navigation }) {
     } catch (error) {
       console.log('Error fetching employee data:', error);
     }
+    setDataFetching(false);
   };
 
   const handleLoad = async () => {
@@ -182,20 +184,37 @@ export default function RosterView({ navigation }) {
         >
           {/* Stats Card */}
           <View style={styles.statsCard}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{companyData?.length}</Text>
-              <Text style={styles.statLabel}>Companies</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{rosterGroupData?.length}</Text>
-              <Text style={styles.statLabel}>Groups</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{allEmployees?.length}</Text>
-              <Text style={styles.statLabel}>Employees</Text>
-            </View>
+            {dataFetching ? (
+              <ActivityIndicator
+                size="small"
+                color="#0d4483"
+                style={{
+                  width: '100%',
+                  height: vh * 6,
+                  alignSelf: 'center',
+                  // zIndex: dataFetching ? 1 : -1,
+                }}
+              />
+            ) : (
+              <>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{companyData?.length}</Text>
+                  <Text style={styles.statLabel}>Companies</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>
+                    {rosterGroupData?.length}
+                  </Text>
+                  <Text style={styles.statLabel}>Groups</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{allEmployees?.length}</Text>
+                  <Text style={styles.statLabel}>Employees</Text>
+                </View>
+              </>
+            )}
           </View>
 
           {/* Modern Date Card */}

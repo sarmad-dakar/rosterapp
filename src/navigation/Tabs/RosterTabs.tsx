@@ -39,10 +39,6 @@ const CustomerStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="customerList" component={EmployeeList} />
-      <Stack.Screen
-        name="rosterTransactionView"
-        component={RosterTransactionView}
-      />
       {/* Add other screens here if needed */}
     </Stack.Navigator>
   );
