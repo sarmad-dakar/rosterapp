@@ -19,6 +19,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    height: '100%',
   },
   input: {
     width: '80%',

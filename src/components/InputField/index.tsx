@@ -84,6 +84,8 @@ const InputField: FC<Props> = props => {
   const handleInputPress = () => {
     if (props.reference) {
       props.reference.current?.focus();
+    } else if (props.onPress) {
+      props.onPress();
     } else {
       inputRef.current?.focus();
     }
@@ -118,36 +120,44 @@ const InputField: FC<Props> = props => {
         ]}
       >
         <Pressable onPress={handleInputPress} style={styles.textContainer}>
-          {props.icon && (
-            <View style={styles.iconContainer}>
+          <View
+            style={styles.textContainer}
+            pointerEvents={handleInputPress ? 'none' : 'auto'}
+          >
+            {props.icon && (
+              <View style={styles.iconContainer}>
+                <Image
+                  source={props.icon}
+                  style={[
+                    styles.rightIcon,
+                    displayError && { tintColor: 'red' },
+                  ]}
+                />
+              </View>
+            )}
+            <TextInput
+              onFocus={tintColorAnimation}
+              onBlur={handleBlur}
+              ref={props.reference ?? inputRef}
+              style={styles.input}
+              placeholderTextColor={displayError ? 'red' : '#696969ff'}
+              // allowFontScaling={false}
+              value={inputValue}
+              onChangeText={handleChangeText}
+              secureTextEntry={showPassword}
+              editable={!(props.editable === false)}
+              {...props}
+            />
+          </View>
+          {props.rightIcon && (
+            <View style={styles.rightContainer}>
               <Image
-                source={props.icon}
+                source={props.rightIcon}
                 style={[styles.rightIcon, displayError && { tintColor: 'red' }]}
               />
             </View>
           )}
-          <TextInput
-            onFocus={tintColorAnimation}
-            onBlur={handleBlur}
-            ref={props.reference ?? inputRef}
-            style={styles.input}
-            placeholderTextColor={displayError ? 'red' : '#696969ff'}
-            // allowFontScaling={false}
-            value={inputValue}
-            onChangeText={handleChangeText}
-            secureTextEntry={showPassword}
-            {...props}
-          />
         </Pressable>
-
-        {props.rightIcon && (
-          <View style={styles.rightContainer}>
-            <Image
-              source={props.rightIcon}
-              style={[styles.rightIcon, displayError && { tintColor: 'red' }]}
-            />
-          </View>
-        )}
       </Animated.View>
 
       {displayError && <Text style={styles.error}>{displayError}</Text>}

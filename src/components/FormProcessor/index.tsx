@@ -345,6 +345,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[2]}
       >
         {/* Header Form */}
         {headerForm.length > 0 && (
@@ -367,38 +368,38 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
             )}
           </View>
         )}
-
+        {/* Tab Pills */}
+        {tabs.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabHeader}
+          >
+            {tabs.map((tab, index) => {
+              const isActive = activeTab === index;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.tabPill, isActive && styles.tabPillActive]}
+                  onPress={() => handleTabPress(index)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.tabPillText,
+                      isActive && styles.tabPillTextActive,
+                    ]}
+                  >
+                    {tab.displayName}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        ) : null}
         {/* Modern Tabs */}
         {tabs.length > 0 && (
           <View style={styles.tabsContainer}>
-            {/* Tab Pills */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.tabHeader}
-            >
-              {tabs.map((tab, index) => {
-                const isActive = activeTab === index;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.tabPill, isActive && styles.tabPillActive]}
-                    onPress={() => handleTabPress(index)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.tabPillText,
-                        isActive && styles.tabPillTextActive,
-                      ]}
-                    >
-                      {tab.displayName}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
             {/* Tab Content with Fade Animation */}
             {tabForm.map((formFields, pageIndex) =>
               activeTab === pageIndex ? (

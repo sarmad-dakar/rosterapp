@@ -11,6 +11,7 @@ import InputField from '../InputField';
 import { vw } from '../../utils/units';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
+import { icons } from '../../assets';
 
 const DatePickerInput = ({ field, onChange }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -88,6 +89,8 @@ const DatePickerInput = ({ field, onChange }) => {
         value={moment(date).format('YYYY-MM-DD')}
         inputStyle={{ width: vw * 42 }}
         onPress={() => setShowDatePicker(true)}
+        editable={false}
+        rightIcon={icons.calendar}
       />
     </View>
   );

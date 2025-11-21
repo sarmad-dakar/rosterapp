@@ -101,6 +101,11 @@ const InputDropdown: FC<Props> = props => {
     if (props.dropdown && !props.ismodal && props.dropdownData) {
       // Open dropdown list for non-modal dropdown
       setDropdownVisible(true);
+    } else if (props.ismodal) {
+      // Open dropdown list for non-modal dropdown
+      if (props.onPress) {
+        props.onPress();
+      }
     } else if (props.reference) {
       props.reference.current?.focus();
     } else {
