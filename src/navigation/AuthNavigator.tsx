@@ -7,6 +7,7 @@ import LoginScreen from '../screens/LoginScreen';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import RosterTransactionView from '../screens/RosterTransactionView';
+import RosterDetailViewV2 from '../screens/RoasterDetailViewV2';
 // import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
@@ -39,6 +40,10 @@ export default function AuthNavigator() {
                 headerBackTitle: '',
                 title: props.route.params?.title,
               })}
+            />
+            <Stack.Screen
+              name="rosterDetailView"
+              component={RosterDetailViewV2}
             />
           </>
         )}

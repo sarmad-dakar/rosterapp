@@ -1,25 +1,16 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import RosterTransactionView from '../../screens/RosterTransactionView';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
-import RosterDetailViewV2 from '../../screens/RoasterDetailViewV2';
-import { StackScreen } from 'react-native-screens';
-import EmployeeList from '../../screens/EmployeeList';
-import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import EmployeeList from '../../screens/EmployeeList';
 import ProfileTab from '../../screens/ProfileTab';
 
 const Tab = createBottomTabNavigator();
@@ -29,7 +20,6 @@ const RosterStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="rosterView" component={RosterView} />
-      <Stack.Screen name="rosterDetailView" component={RosterDetailViewV2} />
       {/* Add other screens here if needed */}
     </Stack.Navigator>
   );
