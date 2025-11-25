@@ -1,6 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabScreenProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,8 +15,24 @@ import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import EmployeeList from '../../screens/EmployeeList';
 import ProfileTab from '../../screens/ProfileTab';
+import SettingsScreen from '../../screens/SettingsScreen';
+import EmployeeScreen from '../../screens/EmployeeScreen';
+import RosterScreen from '../../screens/RosterScreen';
 
-const Tab = createBottomTabNavigator();
+type TabParamList = {
+  Home: undefined;
+  'Add Customer': undefined;
+  Profile: undefined;
+  Stats: undefined;
+  EmployeeScreen: undefined;
+  SettingsScreen: undefined;
+  RosterScreen: undefined;
+};
+
+export type TabScreenParams<T extends keyof TabParamList> =
+  BottomTabScreenProps<TabParamList, T>;
+
+const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator();
 
 const RosterStack = () => {
@@ -46,8 +65,11 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
   const tabIcons = {
     Home: 'home',
     'Add Customer': 'person-add',
-    Profile: 'person-circle',
+    Profile: 'person-circle-outline',
     Stats: 'bar-chart',
+    EmployeeScreen: 'people-outline',
+    SettingsScreen: 'settings-outline',
+    RosterScreen: 'list',
   };
 
   const tabColors = {
@@ -55,6 +77,9 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
     'Add Customer': '#10B981',
     Profile: '#F59E0B',
     Stats: '#8B5CF6',
+    EmployeeScreen: '#EF4444',
+    SettingsScreen: '#6366F1',
+    RosterScreen: '#EC4899',
   };
 
   return (
@@ -153,12 +178,34 @@ export default function RoasterTabs() {
         }}
       >
         <Tab.Screen
+          name="EmployeeScreen"
+          component={EmployeeScreen}
+          options={{
+            tabBarLabel: 'Employee',
+          }}
+        />
+        <Tab.Screen
+          name="SettingsScreen"
+          component={SettingsScreen}
+          options={{
+            tabBarLabel: 'Settings',
+          }}
+        />
+        <Tab.Screen
+          name="RosterScreen"
+          component={RosterScreen}
+          options={{
+            tabBarLabel: 'Roster',
+          }}
+        />
+        <Tab.Screen
           name="Home"
           component={RosterStack}
           options={{
             tabBarLabel: 'Home',
           }}
         />
+
         <Tab.Screen
           name="Add Customer"
           component={CustomerStack}
@@ -199,11 +246,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   tabContent: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    // paddingVertical: 10,
     minWidth: 80,
     height: 36,
   },
@@ -220,7 +266,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginLeft: 6,
     textAlign: 'center',
   },
 });
