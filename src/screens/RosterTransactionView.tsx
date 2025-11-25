@@ -8,6 +8,7 @@ import { dynamicTableEnum } from '../utils/dummyJson';
 const EmployeeCareerScreen = ({ route }) => {
   const styles = MyStyles();
   const employeeCode = route?.params?.employeeCode;
+  const [currentEmployeeCode, setCurrentEmployeeCode] = useState('');
   const [dynamicFormData, setDynamicFormData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
@@ -21,9 +22,12 @@ const EmployeeCareerScreen = ({ route }) => {
       );
       if (currentField?.jquerySelectorID === 'EmployeeCode') {
         fetchDynamicForm(selectedItem?.code);
+        setCurrentEmployeeCode(selectedItem?.code);
       }
-      // This is called AFTER a modal selection is made
-      // You can perform actions based on the selected value here
+
+      if (currentField?.jquerySelectorID === 'HistoryRecordSelect') {
+        fetchDynamicForm(currentEmployeeCode, selectedItem?.pageNo);
+      }
     },
     onFieldPress: async (currentField: any, pageIndex: any) => {
       console.log(

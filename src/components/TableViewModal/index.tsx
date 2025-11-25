@@ -17,6 +17,7 @@ interface TableViewModalProps {
   title?: string;
   onClose?: () => void;
   onChange?: (selectedRows: TableData[]) => void;
+  isMultiSelect?: boolean;
 }
 
 const TableViewModal: React.FC<TableViewModalProps> = ({
@@ -24,6 +25,7 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
   title = 'Select a PayGroup',
   onClose,
   onChange,
+  isMultiSelect = false,
 }) => {
   console.log('tableData', tableData);
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,13 +68,26 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
 
   // Toggle row selection
   const toggleRowSelection = (rowIndex: number) => {
-    const newSelectedRows = new Set(selectedRows);
-    if (newSelectedRows.has(rowIndex)) {
-      newSelectedRows.delete(rowIndex);
+    if (isMultiSelect) {
+      // Multi-select mode: toggle selection
+      const newSelectedRows = new Set(selectedRows);
+      if (newSelectedRows.has(rowIndex)) {
+        newSelectedRows.delete(rowIndex);
+      } else {
+        newSelectedRows.add(rowIndex);
+      }
+      setSelectedRows(newSelectedRows);
     } else {
-      newSelectedRows.add(rowIndex);
+      // Single-select mode: replace selection and auto-submit
+      const newSelectedRows = new Set([rowIndex]);
+      setSelectedRows(newSelectedRows);
+      
+      // Auto-submit for single selection
+      if (onChange) {
+        const selected = [tableData[rowIndex]];
+        onChange(selected);
+      }
     }
-    setSelectedRows(newSelectedRows);
   };
 
   // Handle done button press
@@ -240,8 +255,8 @@ const TableViewModal: React.FC<TableViewModalProps> = ({
         </View>
       </View>
 
-      {/* Done Button */}
-      {onChange && (
+      {/* Done Button - Only show for multi-select mode */}
+      {onChange && isMultiSelect && (
         <View style={styles.actionContainer}>
           <TouchableOpacity
             style={[

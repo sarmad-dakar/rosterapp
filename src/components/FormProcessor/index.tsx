@@ -44,6 +44,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
   const [currentActiveField, setCurrentActiveField] = useState(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(null);
   const [modalTitle, setModalTitle] = useState('Select an option');
+  const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const insets = useSafeAreaInsets();
@@ -70,18 +71,19 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
 
   const sortAndProcessData = data => {
     if (data.tabs) {
-      // Enrich dynamicFields with onClickFuncName from pageTableModals
+      // Enrich dynamicFields with onClickFuncName and isMultiSelect from pageTableModals
       const enrichedDynamicFields = data.dynamicFields.map(field => {
         // Find matching pageTableModal by configurationKey
         const matchingModal = data.pageTableModals?.find(
           modal => modal.configurationKey === field.jquerySelectorID,
         );
 
-        // If match found, append onClickFuncName to the field
-        if (matchingModal && matchingModal.onClickFuncName) {
+        // If match found, append onClickFuncName and isMultiSelect to the field
+        if (matchingModal) {
           return {
             ...field,
             onClickFuncName: matchingModal.onClickFuncName,
+            isMultiSelect: matchingModal.isMultiSelect,
           };
         }
 
@@ -138,6 +140,9 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     }
 
     setModalTitle(title);
+
+    // Set isMultiSelect from the field, default to false if not provided
+    setIsMultiSelect(currentField?.isMultiSelect ?? false);
 
     // Check if field has apiUrl and needs to load data first
     if (currentField?.apiUrl && customButtonFunctions?.onFieldPress) {
@@ -652,6 +657,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
           onChange={item => handleTableSelection(item)}
           tableData={tableData}
           title={modalTitle}
+          isMultiSelect={isMultiSelect}
         />
       </PopupWrapper>
     </View>
