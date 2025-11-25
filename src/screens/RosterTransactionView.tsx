@@ -11,6 +11,47 @@ const EmployeeCareerScreen = ({ route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const cancelTokenSource = axios.CancelToken.source();
+  const customButtonFunctions = {
+    afterLoadBtnCick: (selectedItem: any, currentField: any) => {
+      console.log(
+        'afterLoadBtnCick - After modal selection',
+        selectedItem,
+        currentField,
+      );
+      // This is called AFTER a modal selection is made
+      // You can perform actions based on the selected value here
+    },
+    onFieldPress: async (currentField: any, pageIndex: any) => {
+      console.log(
+        'onFieldPress - Before opening field',
+        currentField,
+        pageIndex,
+      );
+
+      // This is called BEFORE opening a dropdown/modal that has apiUrl
+      // Load data via API if the field has apiUrl
+      if (currentField?.apiUrl) {
+        try {
+          console.log('Loading data from API:', currentField.apiUrl);
+
+          // Example API call
+          // const response = await fetch(currentField.apiUrl);
+          // const data = await response.json();
+
+          // Return the loaded data to populate the field
+          // return data;
+
+          // For now, returning null will use existing fieldData
+          return null;
+        } catch (error) {
+          console.error('Error loading field data:', error);
+          return null;
+        }
+      }
+
+      return null;
+    },
+  };
 
   const loadingMessages = [
     'Fetching data...',
@@ -114,6 +155,7 @@ const EmployeeCareerScreen = ({ route }) => {
     <View style={styles.container}>
       <FormProcessor
         dynamicFormData={dynamicFormData}
+        customButtonFunctions={customButtonFunctions}
         handleSubmit={handleFormSubmit}
         employeeCode={employeeCode}
       />

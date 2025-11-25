@@ -22,12 +22,14 @@ interface FormProcessorProps {
   dynamicFormData: any;
   handleSubmit: (formData: any) => Promise<void>;
   employeeCode?: string;
+  customButtonFunctions: any;
 }
 
 const FormProcessor: React.FC<FormProcessorProps> = ({
   dynamicFormData,
   handleSubmit,
   employeeCode,
+  customButtonFunctions,
 }) => {
   const styles = MyStyles();
   const [tabs, setTabs] = useState([]);
@@ -38,6 +40,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
   const [tableData, setTableData] = useState([]);
   const [currentActiveField, setCurrentActiveField] = useState(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(null);
+  const [modalTitle, setModalTitle] = useState('Select an option');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const insets = useSafeAreaInsets();
@@ -63,11 +66,29 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
 
   const sortAndProcessData = data => {
     if (data.tabs) {
+      // Enrich dynamicFields with onClickFuncName from pageTableModals
+      const enrichedDynamicFields = data.dynamicFields.map(field => {
+        // Find matching pageTableModal by configurationKey
+        const matchingModal = data.pageTableModals?.find(
+          modal => modal.configurationKey === field.jquerySelectorID,
+        );
+
+        // If match found, append onClickFuncName to the field
+        if (matchingModal && matchingModal.onClickFuncName) {
+          return {
+            ...field,
+            onClickFuncName: matchingModal.onClickFuncName,
+          };
+        }
+
+        return field;
+      });
+
       const sortedTabs = data.tabs.sort((a, b) => a.tabId - b.tabId);
       let tabArray = [];
 
       for (let i = 0; i < sortedTabs.length; i++) {
-        const fieldData = data.dynamicFields.filter(
+        const fieldData = enrichedDynamicFields.filter(
           item => item.parentTabID === i + 1,
         );
         tabArray.push(
@@ -75,11 +96,11 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
         );
       }
 
-      const generalFields = data.dynamicFields.filter(
+      const generalFields = enrichedDynamicFields.filter(
         item => item.parentTabID === 0 && !item.isHeader,
       );
 
-      const headerFields = data.dynamicFields.filter(item => item.isHeader);
+      const headerFields = enrichedDynamicFields.filter(item => item.isHeader);
 
       setHeaderForm(headerFields);
       setGeneralForm(
@@ -90,12 +111,70 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     }
   };
 
-  const handlePopupPress = (fieldData, currentField, pageIndex) => {
-    if (popupRef && popupRef.current) {
-      popupRef.current.show();
-      setTableData(fieldData);
-      setCurrentPageIndex(pageIndex);
-      setCurrentActiveField(currentField);
+  const handlePopupPress = async (fieldData, currentField, pageIndex) => {
+    // Get modal title - check pageTableModals first, then field displayName/placeholder
+    let title = 'Select an option';
+
+    // Try to find matching pageTableModal for more specific title
+    if (dynamicFormData?.pageTableModals && currentField?.jquerySelectorID) {
+      const matchingModal = dynamicFormData.pageTableModals.find(
+        modal => modal.configurationKey === currentField.jquerySelectorID,
+      );
+      if (matchingModal?.modalTitle) {
+        title = matchingModal.modalTitle;
+      }
+    }
+
+    // Fallback to field's own displayName or placeholder
+    if (!title || title === 'Select an option') {
+      title =
+        currentField?.displayName ||
+        currentField?.placeholder ||
+        'Select an option';
+    }
+
+    setModalTitle(title);
+
+    // Check if field has apiUrl and needs to load data first
+    if (currentField?.apiUrl && customButtonFunctions?.onFieldPress) {
+      console.log(
+        'Field has apiUrl, calling onFieldPress:',
+        currentField.apiUrl,
+      );
+      try {
+        // Call onFieldPress to load data via API
+        const updatedFieldData = await customButtonFunctions.onFieldPress(
+          currentField,
+          pageIndex,
+        );
+
+        // If API returned data, use it; otherwise use existing fieldData
+        const dataToShow = updatedFieldData || fieldData;
+
+        if (popupRef && popupRef.current) {
+          popupRef.current.show();
+          setTableData(dataToShow);
+          setCurrentPageIndex(pageIndex);
+          setCurrentActiveField(currentField);
+        }
+      } catch (error) {
+        console.error('Error loading field data:', error);
+        // Still show modal with existing data if API fails
+        if (popupRef && popupRef.current) {
+          popupRef.current.show();
+          setTableData(fieldData);
+          setCurrentPageIndex(pageIndex);
+          setCurrentActiveField(currentField);
+        }
+      }
+    } else {
+      // No apiUrl, show modal with existing data
+      if (popupRef && popupRef.current) {
+        popupRef.current.show();
+        setTableData(fieldData);
+        setCurrentPageIndex(pageIndex);
+        setCurrentActiveField(currentField);
+      }
     }
   };
 
@@ -124,6 +203,19 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     }
 
     popupRef.current.hide();
+
+    // Call custom button function if onClickFuncName exists
+    if (currentActiveField?.onClickFuncName && customButtonFunctions) {
+      const funcName = currentActiveField.onClickFuncName;
+      if (typeof customButtonFunctions[funcName] === 'function') {
+        console.log(`Calling custom function: ${funcName}`, currentItems);
+        customButtonFunctions[funcName](currentItems, currentActiveField);
+      } else {
+        console.warn(
+          `Custom function '${funcName}' not found in customButtonFunctions`,
+        );
+      }
+    }
   };
 
   const handleGeneralFormChange = (currentField, value) => {
@@ -237,6 +329,46 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     setActiveTab(index);
   };
 
+  const handleDropdownPress = async (field, pageIndex, isGeneral = false) => {
+    // Check if field has apiUrl and needs to load data first
+    if (field?.apiUrl && customButtonFunctions?.onFieldPress) {
+      console.log('Dropdown has apiUrl, calling onFieldPress:', field.apiUrl);
+      try {
+        // Call onFieldPress to load data via API
+        const updatedFieldData = await customButtonFunctions.onFieldPress(
+          field,
+          pageIndex,
+        );
+
+        // Update the field's fieldData if API returned data
+        if (updatedFieldData) {
+          if (isGeneral) {
+            let updatedGeneralForm = [...generalForm];
+            const fieldObject = updatedGeneralForm.find(
+              f => f.jquerySelectorID === field.jquerySelectorID,
+            );
+            if (fieldObject) {
+              fieldObject.fieldData = updatedFieldData;
+            }
+            setGeneralForm(updatedGeneralForm);
+          } else {
+            let updatedTabForm = [...tabForm];
+            const currentPage = updatedTabForm[pageIndex];
+            const fieldObject = currentPage.find(
+              f => f.jquerySelectorID === field.jquerySelectorID,
+            );
+            if (fieldObject) {
+              fieldObject.fieldData = updatedFieldData;
+            }
+            setTabForm(updatedTabForm);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading dropdown data:', error);
+      }
+    }
+  };
+
   const getFieldWidth = layoutClass => {
     if (layoutClass === 12) return '100%';
     if (layoutClass === 6) return vw * 42;
@@ -262,6 +394,11 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
           dropdownData={field.fieldData}
           value={field.defaultValue?.description}
           dropdown={true}
+          onPress={
+            field.apiUrl
+              ? () => handleDropdownPress(field, pageIndex, isGeneral)
+              : undefined
+          }
           onChange={item =>
             isGeneral
               ? handleGeneralFormChange(field, item)
@@ -281,14 +418,16 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
           value={field.defaultValue?.description}
           ismodal={true}
           dropdown={false}
-          onPress={() =>
-            field.fieldData?.length > 0 &&
-            handlePopupPress(
-              field.fieldData,
-              field,
-              isGeneral ? 'general' : pageIndex,
-            )
-          }
+          onPress={() => {
+            // Allow press if field has data OR has apiUrl (to load data)
+            if (field.fieldData?.length > 0 || field.apiUrl) {
+              handlePopupPress(
+                field.fieldData || [],
+                field,
+                isGeneral ? 'general' : pageIndex,
+              );
+            }
+          }}
         />
       );
     }
@@ -492,6 +631,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
         <TableViewModal
           onChange={item => handleTableSelection(item)}
           tableData={tableData}
+          title={modalTitle}
         />
       </PopupWrapper>
     </View>
