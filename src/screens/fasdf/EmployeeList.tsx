@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { getDynamicTableData } from '../api/rosterSchedule';
-import { dynamicTableEnum } from '../utils/dummyJson';
+import { getDynamicTableData } from '../../api/rosterSchedule';
+import { dynamicTableEnum } from '../../utils/dummyJson';
 import { useSelector } from 'react-redux';
-import { vh } from '../utils/units';
+import { vh } from '../../utils/units';
 // Import from react-native-vector-icons
 // Make sure to install: npm install react-native-vector-icons
 // import Icon from 'react-native-vector-icons/Feather';
