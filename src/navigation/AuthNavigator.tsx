@@ -44,6 +44,11 @@ export default function AuthNavigator() {
             <Stack.Screen
               name="rosterDetailView"
               component={RosterDetailViewV2}
+              options={{
+                headerShown: true,
+                headerTitle: '',
+                headerBackTitle: '',
+              }}
             />
           </>
         )}
