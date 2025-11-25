@@ -1,22 +1,20 @@
+import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
   ActivityIndicator,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getRosterSchedules } from '../api/rosterSchedule';
-import moment from 'moment';
-import { vh } from '../utils/units';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
 import { colors } from '../utils/colors';
+import { vh } from '../utils/units';
 
 // const weekDays = [
 //   { day: 'Mon', date: 21, month: 'Jul' },
@@ -313,7 +311,7 @@ const scheduleData = {
   ],
 };
 
-const RosterDetailViewV2 = ({ route }) => {
+const RosterDetailViewV2 = ({ navigation, route }) => {
   const [selectedDate, setSelectedDate] = useState(22);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [weekDays, setWeekDays] = useState([]);
@@ -325,7 +323,6 @@ const RosterDetailViewV2 = ({ route }) => {
   const [currentSelectedDate, setCurrentSelectedDate] = useState(
     moment(rosterDate),
   );
-  const insets = useSafeAreaInsets();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loadingState, setLoadingState] = useState(false);
@@ -338,6 +335,31 @@ const RosterDetailViewV2 = ({ route }) => {
       // fetchScheduleData();
     }
   }, [scheduleTesting]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => renderHeaderRight,
+    });
+  }, []);
+
+  const renderHeaderRight = (
+    <View style={styles.toggleContainer}>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TouchableOpacity style={styles.circleBtn}>
+          <Icon name="filter-alt" size={15} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.circleBtn}>
+          <Icon name="mail" size={15} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.circleBtn}>
+          <Icon name="picture-as-pdf" size={15} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.circleBtn}>
+          <Icon name="edit" size={15} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   const sortJson = (data, calendarDate) => {
     setLoadingState(true);
@@ -711,33 +733,8 @@ const RosterDetailViewV2 = ({ route }) => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top,
-        },
-      ]}
-    >
+    <View style={[styles.container]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-      <View style={styles.toggleContainer}>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TouchableOpacity style={styles.circleBtn}>
-            <Icon name="filter-alt" size={15} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.circleBtn}>
-            <Icon name="mail" size={15} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.circleBtn}>
-            <Icon name="picture-as-pdf" size={15} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.circleBtn}>
-            <Icon name="edit" size={15} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Date Header */}
       {renderDateHeader()}
       <View style={styles.weekNavigationContainer}>
@@ -839,8 +836,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 5,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
