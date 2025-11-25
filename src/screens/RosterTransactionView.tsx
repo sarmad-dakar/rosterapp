@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { getDynamicForm } from '../api/rosterSchedule';
+import { getDynamicForm, getDynamicTableData } from '../api/rosterSchedule';
 import FormProcessor from '../components/FormProcessor';
 import axios from 'axios';
+import { dynamicTableEnum } from '../utils/dummyJson';
 
 const EmployeeCareerScreen = ({ route }) => {
   const styles = MyStyles();
@@ -18,6 +19,9 @@ const EmployeeCareerScreen = ({ route }) => {
         selectedItem,
         currentField,
       );
+      if (currentField?.jquerySelectorID === 'EmployeeCode') {
+        fetchDynamicForm(selectedItem?.code);
+      }
       // This is called AFTER a modal selection is made
       // You can perform actions based on the selected value here
     },
@@ -63,7 +67,7 @@ const EmployeeCareerScreen = ({ route }) => {
   useEffect(() => {
     if (employeeCode) {
       console.log('Fetching data for employee code:', employeeCode);
-      fetchDynamicForm();
+      fetchDynamicForm(employeeCode);
     }
     return () => {
       cancelTokenSource.cancel('Operation canceled on unmount.');
@@ -80,7 +84,7 @@ const EmployeeCareerScreen = ({ route }) => {
     }
   }, [isLoading]);
 
-  const fetchDynamicForm = async () => {
+  const fetchDynamicForm = async (employeeCode = '', sequenceNumber = '') => {
     try {
       setIsLoading(true);
       let data = {
@@ -88,7 +92,7 @@ const EmployeeCareerScreen = ({ route }) => {
         Operation: 'read',
         Parameters: {
           EmployeeCode: employeeCode,
-          SeqNo: '',
+          SeqNo: sequenceNumber ? sequenceNumber : '',
           EffectiveDate: '',
         },
       };

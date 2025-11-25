@@ -17,6 +17,9 @@ import CheckboxComponent from '../Checkbox';
 import PopupWrapper from '../PopupWrapper';
 import TableViewModal from '../TableViewModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getDynamicForm, getDynamicTableData } from '../../api/rosterSchedule';
+import { dynamicTableEnum } from '../../utils/dummyJson';
+import { useSelector } from 'react-redux';
 
 interface FormProcessorProps {
   dynamicFormData: any;
@@ -44,6 +47,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const insets = useSafeAreaInsets();
+  const allEmployees = useSelector((state: any) => state.auth?.employees);
 
   const popupRef = useRef<any>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -143,9 +147,8 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       );
       try {
         // Call onFieldPress to load data via API
-        const updatedFieldData = await customButtonFunctions.onFieldPress(
-          currentField,
-          pageIndex,
+        const updatedFieldData = await fetchFormdata(
+          currentField?.tableDataEnum,
         );
 
         // If API returned data, use it; otherwise use existing fieldData
@@ -335,10 +338,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       console.log('Dropdown has apiUrl, calling onFieldPress:', field.apiUrl);
       try {
         // Call onFieldPress to load data via API
-        const updatedFieldData = await customButtonFunctions.onFieldPress(
-          field,
-          pageIndex,
-        );
+        const updatedFieldData = await fetchFormdata(field?.tableDataEnum);
 
         // Update the field's fieldData if API returned data
         if (updatedFieldData) {
@@ -366,6 +366,26 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       } catch (error) {
         console.error('Error loading dropdown data:', error);
       }
+    }
+  };
+
+  const fetchFormdata = async tableDataEnum => {
+    try {
+      if (tableDataEnum === dynamicTableEnum.Employees) {
+        return allEmployees;
+      }
+
+      let data = {
+        tableDataEnum: tableDataEnum,
+        apiParams: '',
+      };
+      console.log('Fetching form data:', data);
+      const response = await getDynamicTableData(data);
+      console.log('Form data fetched:', response?.data);
+      return response?.data;
+    } catch (error) {
+      console.error('Error fetching form data:', error);
+      return [];
     }
   };
 
