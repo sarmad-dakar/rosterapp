@@ -219,17 +219,17 @@ const Dashboard: React.FC<TabScreenParams<'EmployeeScreen'>> = ({}) => {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionButtons}>
             <ActionButton
-              icon="person"
+              icon="person-outline"
               label="Employee Details"
               onPress={() => {}}
             />
             <ActionButton
-              icon="stats-chart"
+              icon="briefcase-outline"
               label="Employee Career"
               onPress={() => {}}
             />
             <ActionButton
-              icon="calendar"
+              icon="calendar-outline"
               label="Employee Schedule"
               onPress={() => {}}
             />
