@@ -10,7 +10,7 @@ import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-import EmployeeList from '../../screens/fasdf/EmployeeList';
+import EmployeeList from '../../screens/EmployeeList';
 import ProfileTab from '../../screens/ProfileTab';
 
 const Tab = createBottomTabNavigator();
