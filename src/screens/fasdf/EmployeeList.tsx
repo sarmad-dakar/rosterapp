@@ -89,9 +89,7 @@ const EmployeeList = ({ navigation }) => {
               <Text style={styles.detailLabel}>Code: </Text>
               <Text style={styles.detailValue}>{item.code}</Text>
             </View>
-            <View
-              style={[styles.detailsRowHalf, { justifyContent: 'flex-end' }]}
-            >
+            <View style={[styles.detailsRowHalf, { justifyContent: 'center' }]}>
               <Text style={styles.detailLabel}>ID: </Text>
               {/*  */}
               <Text style={styles.detailValue}>{item.idCard}</Text>
