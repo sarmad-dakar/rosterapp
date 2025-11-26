@@ -150,17 +150,17 @@ const RosterScreen: React.FC<TabScreenParams<'RosterScreen'>> = () => {
           <View style={styles.actionButtonsRow}>
             <ActionButton
               icon="calendar-outline"
-              label="Shift Defination Details"
+              label="Roster Entries Simple View"
               onPress={() => {}}
             />
             <ActionButton
               icon="create-outline"
-              label="Shift Rule Defination Details"
+              label="Roster Entries Detailed View"
               onPress={() => {}}
             />
             <ActionButton
               icon="grid-outline"
-              label="Shift Grouping Defination Details"
+              label="Roster Yearly Calendar View"
               onPress={() => {}}
             />
           </View>
@@ -172,32 +172,15 @@ const RosterScreen: React.FC<TabScreenParams<'RosterScreen'>> = () => {
           onToggle={() => handleToggle('schedule')}
         >
           <View style={styles.actionButtonsRow}>
+            <View style={styles.placeholder} />
             <ActionButton
               icon="stats-chart-outline"
-              label="Schedule Definition Details Basic"
+              label="Employee Roster Stats Code Statistics"
               onPress={() => {}}
             />
             <ActionButton
               icon="bar-chart-outline"
-              label="Schedule Definition Details Roster"
-              onPress={() => {}}
-            />
-            <ActionButton
-              icon="pie-chart-outline"
-              label="Schedule Seasons"
-              onPress={() => {}}
-            />
-          </View>
-          <View style={styles.actionButtonsRow}>
-            <View style={styles.placeholder} />
-            <ActionButton
-              icon="analytics-outline"
-              label="Roster Schedule Timings"
-              onPress={() => {}}
-            />
-            <ActionButton
-              icon="trending-up-outline"
-              label="Schedule Work Rule Definition Details"
+              label="Roster Shift Code Adjustments"
               onPress={() => {}}
             />
             <View style={styles.placeholder} />

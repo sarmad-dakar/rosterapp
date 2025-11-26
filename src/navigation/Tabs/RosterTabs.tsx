@@ -11,12 +11,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
-import { useNavigation } from '@react-navigation/native';
+import {
+  CommonActions,
+  NavigationProp,
+  useNavigation,
+} from '@react-navigation/native';
 import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import EmployeeScreen from '../../screens/EmployeeScreen';
 import ProfileTab from '../../screens/ProfileTab';
 import RosterScreen from '../../screens/RosterScreen';
 import SettingsScreen from '../../screens/SettingsScreen';
+import { AppNavigatorParamList } from '../AuthNavigator';
 
 type TabParamList = {
   Home: undefined;
@@ -151,15 +157,18 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
 };
 
 export default function RoasterTabs() {
-  const token = useSelector(state => state.auth?.token);
+  const token = useSelector((state: RootState) => state.auth?.token);
   console.log(token, 'Auth Navigator Token');
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<AppNavigatorParamList>>();
   useEffect(() => {
     if (!token) {
-      navigation.navigate('AuthStack', {
-        screen: 'CompanyUrl',
-      });
+      navigation.dispatch(
+        CommonActions.navigate('AuthStack', {
+          screen: 'CompanyUrl',
+        }),
+      );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
