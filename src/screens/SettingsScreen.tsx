@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Platform,
@@ -7,18 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { TabScreenParams } from '../navigation/Tabs/RosterTabs';
-import ActionButton from '../components/ActionButton';
-import { vh } from '../utils/units';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {
-  AppNavigatorParamList,
-  AppNavigatorScreenParams,
-} from '../navigation/AuthNavigator';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import ActionButton from '../components/ActionButton';
+import { TabScreenParams } from '../navigation/Tabs/RosterTabs';
+import { vh } from '../utils/units';
 
 interface AccordionSectionProps {
   title: string;
@@ -95,9 +89,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   );
 };
 
-const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = ({
-  navigation,
-}) => {
+const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = ({}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const [openSection, setOpenSection] = useState<string>('shift');
@@ -156,9 +148,7 @@ const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = ({
             <ActionButton
               icon="briefcase-outline"
               label="Shift Defination Details"
-              onPress={() => {
-                navigation.navigate('RosterView');
-              }}
+              onPress={() => {}}
             />
             <ActionButton
               icon="document-text-outline"

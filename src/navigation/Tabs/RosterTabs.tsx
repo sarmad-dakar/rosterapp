@@ -30,7 +30,7 @@ type TabParamList = {
   Profile: undefined;
   Stats: undefined;
   EmployeeScreen: undefined;
-  SettingsStack: undefined;
+  RosterStack: undefined;
   SettingsScreen: undefined;
   RosterScreen: undefined;
   RosterView: undefined;
@@ -45,9 +45,9 @@ const Stack = createNativeStackNavigator<TabParamList>();
 const RosterStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
-      <Stack.Screen name="RosterView" component={RosterView} />
       {/* Add other screens here if needed */}
+      <Stack.Screen name="RosterScreen" component={RosterScreen} />
+      <Stack.Screen name="RosterView" component={RosterView} />
     </Stack.Navigator>
   );
 };
@@ -67,8 +67,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
     Profile: 'person-circle-outline',
     Stats: 'bar-chart',
     EmployeeScreen: 'people-outline',
-    SettingsStack: 'settings-outline',
-    RosterScreen: 'list',
+    SettingsScreen: 'settings-outline',
+    RosterStack: 'list',
   };
 
   const tabColors = {
@@ -77,8 +77,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
     Profile: '#F59E0B',
     Stats: '#8B5CF6',
     EmployeeScreen: '#EF4444',
-    SettingsStack: '#6366F1',
-    RosterScreen: '#EC4899',
+    SettingsScreen: '#6366F1',
+    RosterStack: '#EC4899',
   };
 
   return (
@@ -187,15 +187,15 @@ export default function RoasterTabs() {
           }}
         />
         <Tab.Screen
-          name="SettingsStack"
-          component={RosterStack}
+          name="SettingsScreen"
+          component={SettingsScreen}
           options={{
             tabBarLabel: 'Settings',
           }}
         />
         <Tab.Screen
-          name="RosterScreen"
-          component={RosterScreen}
+          name="RosterStack"
+          component={RosterStack}
           options={{
             tabBarLabel: 'Roster',
           }}
