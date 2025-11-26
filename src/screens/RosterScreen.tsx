@@ -89,7 +89,9 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   );
 };
 
-const RosterScreen: React.FC<TabScreenParams<'RosterScreen'>> = () => {
+const RosterScreen: React.FC<TabScreenParams<'RosterScreen'>> = ({
+  navigation,
+}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const [openSection, setOpenSection] = useState<string>('shift');
@@ -156,7 +158,9 @@ const RosterScreen: React.FC<TabScreenParams<'RosterScreen'>> = () => {
             <ActionButton
               icon="create-outline"
               label="Roster Entries Detailed View"
-              onPress={() => {}}
+              onPress={() => {
+                navigation.navigate('RosterView');
+              }}
             />
             <ActionButton
               icon="grid-outline"
