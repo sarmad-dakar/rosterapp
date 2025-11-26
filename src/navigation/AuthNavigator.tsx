@@ -2,31 +2,37 @@
 import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
-  NativeStackNavigationProp,
+  NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 import ModernLoginScreen from '../screens/CompanyURL';
 import EmployeeList from '../screens/EmployeeList';
 import LoginScreen from '../screens/LoginScreen';
 import RosterDetailViewV2 from '../screens/RoasterDetailViewV2';
 import RosterTransactionView from '../screens/RosterTransactionView';
 import RoasterTabs from './Tabs/RosterTabs';
-import { RootState } from '../redux/store';
+import RosterView from '../screens/RosterView';
 
 export type AppNavigatorParamList = {
   AuthStack: undefined;
   Home: undefined;
-  rosterTransactionView: { title: string; transactionId: string };
+  rosterTransactionView: {
+    title: string;
+    transactionId?: string;
+    employeeCode: string;
+  };
   rosterDetailView: { rosterId: string };
   customerList: {
     screen: keyof AppNavigatorParamList;
   };
   CompanyUrl: undefined;
   loginScreen: undefined;
+  RosterView: undefined;
 };
 
 export type AppNavigatorScreenParams<T extends keyof AppNavigatorParamList> =
-  NativeStackNavigationProp<AppNavigatorParamList, T>;
+  NativeStackScreenProps<AppNavigatorParamList, T>;
 
 const Stack = createNativeStackNavigator<AppNavigatorParamList>();
 
@@ -71,6 +77,15 @@ export default function AuthNavigator() {
             <Stack.Screen
               name="customerList"
               component={EmployeeList}
+              options={{
+                headerShown: true,
+                headerTitle: '',
+                headerBackTitle: '',
+              }}
+            />
+            <Stack.Screen
+              name="RosterView"
+              component={RosterView}
               options={{
                 headerShown: true,
                 headerTitle: '',

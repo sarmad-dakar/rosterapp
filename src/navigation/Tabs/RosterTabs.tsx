@@ -13,11 +13,10 @@ import RosterView from '../../screens/RosterView';
 // import RosterDetailView from '../../screens/RosterDetailView';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-import EmployeeList from '../../screens/EmployeeList';
-import ProfileTab from '../../screens/ProfileTab';
-import SettingsScreen from '../../screens/SettingsScreen';
 import EmployeeScreen from '../../screens/EmployeeScreen';
+import ProfileTab from '../../screens/ProfileTab';
 import RosterScreen from '../../screens/RosterScreen';
+import SettingsScreen from '../../screens/SettingsScreen';
 
 type TabParamList = {
   Home: undefined;
@@ -25,20 +24,23 @@ type TabParamList = {
   Profile: undefined;
   Stats: undefined;
   EmployeeScreen: undefined;
+  SettingsStack: undefined;
   SettingsScreen: undefined;
   RosterScreen: undefined;
+  RosterView: undefined;
 };
 
 export type TabScreenParams<T extends keyof TabParamList> =
   BottomTabScreenProps<TabParamList, T>;
 
 const Tab = createBottomTabNavigator<TabParamList>();
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<TabParamList>();
 
 const RosterStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="rosterView" component={RosterView} />
+      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <Stack.Screen name="RosterView" component={RosterView} />
       {/* Add other screens here if needed */}
     </Stack.Navigator>
   );
@@ -59,7 +61,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
     Profile: 'person-circle-outline',
     Stats: 'bar-chart',
     EmployeeScreen: 'people-outline',
-    SettingsScreen: 'settings-outline',
+    SettingsStack: 'settings-outline',
     RosterScreen: 'list',
   };
 
@@ -69,7 +71,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
     Profile: '#F59E0B',
     Stats: '#8B5CF6',
     EmployeeScreen: '#EF4444',
-    SettingsScreen: '#6366F1',
+    SettingsStack: '#6366F1',
     RosterScreen: '#EC4899',
   };
 
@@ -176,8 +178,8 @@ export default function RoasterTabs() {
           }}
         />
         <Tab.Screen
-          name="SettingsScreen"
-          component={SettingsScreen}
+          name="SettingsStack"
+          component={RosterStack}
           options={{
             tabBarLabel: 'Settings',
           }}

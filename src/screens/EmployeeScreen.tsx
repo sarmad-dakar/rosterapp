@@ -24,7 +24,7 @@ import { dynamicTableEnum } from '../utils/dummyJson';
 import { vh } from '../utils/units';
 const { width } = Dimensions.get('window');
 
-interface Employee {
+export interface Employee {
   code: string;
   idCard: string;
   name: string;

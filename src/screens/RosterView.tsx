@@ -1,26 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import moment from 'moment';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  SafeAreaView,
-  StatusBar,
   ActivityIndicator,
   Animated,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import LinearGradient from 'react-native-linear-gradient';
+import { useSelector } from 'react-redux';
+import { getDynamicTableData, getRosterEmployees } from '../api/rosterSchedule';
 import DropdownTrigger from '../components/dropdown';
 import CompaniesPopup from '../components/popups/companiesPopup';
-import RosterGroupPopup from '../components/popups/rosterGroupPopup';
 import EmployeesPopup from '../components/popups/employeePopup';
+import RosterGroupPopup from '../components/popups/rosterGroupPopup';
 import { dynamicTableEnum } from '../utils/dummyJson';
-import { getDynamicTableData, getRosterEmployees } from '../api/rosterSchedule';
-import moment from 'moment';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateEmployees } from '../redux/slices/authSlice';
-import LinearGradient from 'react-native-linear-gradient';
 import { vh } from '../utils/units';
 
 export default function RosterView({ navigation }) {
@@ -35,8 +32,6 @@ export default function RosterView({ navigation }) {
   const [rosterGroupData, setRosterGroupData] = useState([]);
   const allEmployees = useSelector(state => state.auth?.employees);
   const [loading, setLoading] = useState(false);
-  const [dataFetching, setDataFetching] = useState(true);
-  const dispatch = useDispatch();
 
   const companyRef = useRef<any>(null);
   const rosterRef = useRef<any>(null);
@@ -47,7 +42,6 @@ export default function RosterView({ navigation }) {
   useEffect(() => {
     fetchCompanyData();
     fetchRosterData();
-    fetchEmployeeData();
 
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -96,21 +90,6 @@ export default function RosterView({ navigation }) {
       console.log('Error fetching roster data:', error);
     }
   };
-
-  const fetchEmployeeData = async () => {
-    try {
-      const object = {
-        tableDataEnum: dynamicTableEnum.Employees,
-        apiParams: '',
-      };
-      const response = await getDynamicTableData(object);
-      dispatch(updateEmployees(response?.data));
-    } catch (error) {
-      console.log('Error fetching employee data:', error);
-    }
-    setDataFetching(false);
-  };
-
   const handleLoad = async () => {
     try {
       let roasterData = {
@@ -184,37 +163,20 @@ export default function RosterView({ navigation }) {
         >
           {/* Stats Card */}
           <View style={styles.statsCard}>
-            {dataFetching ? (
-              <ActivityIndicator
-                size="small"
-                color="#0d4483"
-                style={{
-                  width: '100%',
-                  height: vh * 6,
-                  alignSelf: 'center',
-                  // zIndex: dataFetching ? 1 : -1,
-                }}
-              />
-            ) : (
-              <>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{companyData?.length}</Text>
-                  <Text style={styles.statLabel}>Companies</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>
-                    {rosterGroupData?.length}
-                  </Text>
-                  <Text style={styles.statLabel}>Groups</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{allEmployees?.length}</Text>
-                  <Text style={styles.statLabel}>Employees</Text>
-                </View>
-              </>
-            )}
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{companyData?.length}</Text>
+              <Text style={styles.statLabel}>Companies</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{rosterGroupData?.length}</Text>
+              <Text style={styles.statLabel}>Groups</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{allEmployees?.length}</Text>
+              <Text style={styles.statLabel}>Employees</Text>
+            </View>
           </View>
 
           {/* Modern Date Card */}

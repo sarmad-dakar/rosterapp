@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   FlatList,
@@ -12,22 +12,28 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
+import { AppNavigatorScreenParams } from '../navigation/AuthNavigator';
+import { RootState } from '../redux/store';
+import { Employee } from './EmployeeScreen';
 
 const IS_IOS_18_PLUS =
   Platform.OS === 'ios' && parseInt(Platform.Version, 10) > 18;
 
-const EmployeeList = ({ navigation }) => {
+const EmployeeList: React.FC<AppNavigatorScreenParams<'customerList'>> = ({
+  navigation,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchVisible, setSearchVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const searchInputRef = useRef(null);
+  const searchInputRef = useRef<TextInput>(null);
   const searchAnimation = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
 
-  const employeData = useSelector(state => state?.auth?.employees);
+  const employeData = useSelector((state: RootState) => state?.auth?.employees);
 
-  const filteredEmployees = employeData.filter(emp => {
+  const filteredEmployees = employeData.filter((emp: Employee) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       emp.code.toLowerCase().includes(searchLower) ||
@@ -36,22 +42,28 @@ const EmployeeList = ({ navigation }) => {
       emp.surName.toLowerCase().includes(searchLower)
     );
   });
+  const renderSearchIcon = useCallback(
+    () =>
+      !IS_IOS_18_PLUS && !searchVisible ? (
+        <TouchableOpacity
+          style={styles.headerSearchButton}
+          onPress={handleSearchPress}
+        >
+          <Text style={styles.headerSearchIcon}>
+            <Icon name="search-outline" />
+          </Text>
+        </TouchableOpacity>
+      ) : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchVisible],
+  );
 
   useEffect(() => {
-    // Set header title
     navigation.setOptions({
       headerTitle: 'Employees',
-      headerRight: () =>
-        !IS_IOS_18_PLUS && !searchVisible ? (
-          <TouchableOpacity
-            style={styles.headerSearchButton}
-            onPress={handleSearchPress}
-          >
-            <Text style={styles.headerSearchIcon}>🔍</Text>
-          </TouchableOpacity>
-        ) : null,
+      headerRight: renderSearchIcon,
     });
-  }, [navigation, searchVisible]);
+  }, [navigation, searchVisible, renderSearchIcon]);
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -116,87 +128,55 @@ const EmployeeList = ({ navigation }) => {
     });
   };
 
-  const getAvatarColor = (index: number) => {
-    const colors = [
-      '#3b82f6',
-      '#8b5cf6',
-      '#ec4899',
-      '#f59e0b',
-      '#10b981',
-      '#06b6d4',
-    ];
-    return colors[index % colors.length];
-  };
-
-  const renderEmployeeCard = ({
-    item,
-    index,
-  }: {
-    item: any;
-    index: number;
-  }) => (
+  const renderEmployeeCard = ({ item }: { item: any; index: number }) => (
     <TouchableOpacity
       style={styles.card}
-      activeOpacity={0.6}
+      activeOpacity={0.7}
       onPress={() => handleEdit(item.code)}
     >
-      <View style={styles.cardHeader}>
-        <View
-          style={[styles.avatar, { backgroundColor: getAvatarColor(index) }]}
-        >
+      <View style={styles.cardContent}>
+        <View style={[styles.avatar, { backgroundColor: '#3b82f6' }]}>
           <Text style={styles.avatarText}>
             {getInitials(item.name, item.surName)}
           </Text>
         </View>
 
-        <View style={styles.headerInfo}>
-          <Text style={styles.employeeName} numberOfLines={1}>
-            {item.name} {item.surName}
-          </Text>
-          <Text style={styles.employeeCode}>#{item.code}</Text>
-        </View>
-
-        <View
-          style={[
-            styles.statusBadge,
-            item.current === 'Yes' ? styles.activeBadge : styles.inactiveBadge,
-          ]}
-        >
-          <View
-            style={[
-              styles.statusDot,
-              item.current === 'Yes' ? styles.activeDot : styles.inactiveDot,
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              item.current === 'Yes' ? styles.activeText : styles.inactiveText,
-            ]}
-          >
-            {item.current === 'Yes' ? 'Active' : 'Inactive'}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.cardBody}>
-        <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>ID Card</Text>
-            <Text style={styles.infoValue}>{item.idCard}</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.headerRow}>
+            <Text style={styles.employeeName}>
+              {item.name} {item.surName}
+            </Text>
+            <View
+              style={[
+                styles.statusDot,
+                item.current === 'Yes' ? styles.activeDot : styles.inactiveDot,
+              ]}
+            />
           </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Age</Text>
-            <Text style={styles.infoValue}>{item.age} years</Text>
+
+          <View style={styles.detailsRowDouble}>
+            <View style={[styles.detailsRowHalf]}>
+              <Text style={styles.detailLabel}>Code: </Text>
+              <Text style={styles.detailValue}>{item.code}</Text>
+            </View>
+            <View style={[styles.detailsRowHalf, { justifyContent: 'center' }]}>
+              <Text style={styles.detailLabel}>ID: </Text>
+              {/*  */}
+              <Text style={styles.detailValue}>{item.idCard}</Text>
+            </View>
           </View>
+
+          <Text style={styles.detailsFullText}>
+            <Text style={[styles.detailLabel]}>DOB: </Text>
+            <Text style={styles.detailValue}>
+              {formatDate(item.dateOfBirth)} || Age :{item.age}
+            </Text>
+          </Text>
         </View>
 
-        <View style={styles.infoRowSingle}>
-          <Text style={styles.infoLabel}>Date of Birth</Text>
-          <Text style={styles.infoValue}>{formatDate(item.dateOfBirth)}</Text>
-        </View>
+        {/* <View style={styles.editIconContainer}>
+          <Text style={styles.editIcon}>✏️</Text>
+        </View> */}
       </View>
     </TouchableOpacity>
   );
@@ -347,129 +327,109 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  cardHeader: {
+  cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
   },
-  headerInfo: {
+  infoContainer: {
     flex: 1,
-    marginRight: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   employeeName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#0f172a',
-    marginBottom: 2,
-  },
-  employeeCode: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  activeBadge: {
-    backgroundColor: '#dcfce7',
-  },
-  inactiveBadge: {
-    backgroundColor: '#fee2e2',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  activeDot: {
-    backgroundColor: '#16a34a',
-  },
-  inactiveDot: {
-    backgroundColor: '#dc2626',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  activeText: {
-    color: '#16a34a',
-  },
-  inactiveText: {
-    color: '#dc2626',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f1f5f9',
-    marginHorizontal: 16,
-  },
-  cardBody: {
-    padding: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    gap: 16,
-  },
-  infoItem: {
+    color: '#1e293b',
     flex: 1,
   },
-  infoRowSingle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: 8,
   },
-  infoLabel: {
+  activeDot: {
+    backgroundColor: '#10b981',
+  },
+  inactiveDot: {
+    backgroundColor: '#ef4444',
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  detailsRowDouble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  detailsRowHalf: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailsFullText: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  detailSeparator: {
+    color: '#cbd5e1',
+    fontSize: 13,
+  },
+  detailLabel: {
     fontSize: 13,
     color: '#64748b',
     fontWeight: '500',
-    marginBottom: 4,
   },
-  infoValue: {
-    fontSize: 15,
-    color: '#0f172a',
-    fontWeight: '600',
+  detailValue: {
+    fontSize: 13,
+    color: '#475569',
+  },
+  editIconContainer: {
+    paddingLeft: 12,
+    justifyContent: 'center',
+  },
+  editIcon: {
+    fontSize: 18,
   },
   bottomSearchContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
     backgroundColor: 'rgba(249, 250, 251, 0.95)',
-    backdropFilter: 'blur(20px)',
     borderTopWidth: 0.5,
     borderTopColor: '#e2e8f0',
     paddingHorizontal: 20,
     paddingTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    boxShadow: '0 -1px 10px 10px rgba(145, 145, 145, 0.05)',
   },
   bottomSearchWrapper: {
     flexDirection: 'row',

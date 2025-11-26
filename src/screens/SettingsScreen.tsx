@@ -13,6 +13,12 @@ import ActionButton from '../components/ActionButton';
 import { vh } from '../utils/units';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {
+  AppNavigatorParamList,
+  AppNavigatorScreenParams,
+} from '../navigation/AuthNavigator';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface AccordionSectionProps {
   title: string;
@@ -89,11 +95,12 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   );
 };
 
-const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = () => {
+const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = ({
+  navigation,
+}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const [openSection, setOpenSection] = useState<string>('shift');
-
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -149,7 +156,9 @@ const SettingsScreen: React.FC<TabScreenParams<'SettingsScreen'>> = () => {
             <ActionButton
               icon="briefcase-outline"
               label="Shift Defination Details"
-              onPress={() => {}}
+              onPress={() => {
+                navigation.navigate('RosterView');
+              }}
             />
             <ActionButton
               icon="document-text-outline"
