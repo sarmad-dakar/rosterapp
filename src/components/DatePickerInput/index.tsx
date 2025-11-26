@@ -6,7 +6,7 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InputField from '../InputField';
 import { vw } from '../../utils/units';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -32,6 +32,14 @@ const DatePickerInput = ({ field, onChange }) => {
       }
     }
   };
+
+  useEffect(() => {
+    if (field.defaultValue) {
+      const dateObj = moment(field.defaultValue, 'YYYY-MM-DD').toDate();
+      setDate(dateObj);
+      setTempDate(dateObj);
+    }
+  }, [field.defaultValue]);
 
   const handleConfirm = () => {
     setDate(tempDate);
