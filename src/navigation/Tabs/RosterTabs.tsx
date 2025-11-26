@@ -198,7 +198,7 @@ export default function RoasterTabs() {
             tabBarLabel: 'Roster',
           }}
         />
-        <Tab.Screen
+        {/* <Tab.Screen
           name="Home"
           component={RosterStack}
           options={{
@@ -212,7 +212,7 @@ export default function RoasterTabs() {
           options={{
             tabBarLabel: 'Employees',
           }}
-        />
+        /> */}
         <Tab.Screen
           name="Profile"
           component={ProfileTab}
