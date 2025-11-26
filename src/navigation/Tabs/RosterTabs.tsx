@@ -44,15 +44,6 @@ const RosterStack = () => {
   );
 };
 
-const CustomerStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="customerList" component={EmployeeList} />
-      {/* Add other screens here if needed */}
-    </Stack.Navigator>
-  );
-};
-
 interface TabBarProps {
   state: any;
   descriptors: any;

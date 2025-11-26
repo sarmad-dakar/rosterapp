@@ -1,3 +1,4 @@
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,12 +15,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import { getDynamicTableData } from '../api/rosterSchedule';
 import ActionButton from '../components/ActionButton';
+import { AppNavigatorParamList } from '../navigation/AuthNavigator';
 import { TabScreenParams } from '../navigation/Tabs/RosterTabs';
 import { updateEmployees } from '../redux/slices/authSlice';
-import { dynamicTableEnum } from '../utils/dummyJson';
-import { vh } from '../utils/units';
 import { RootState } from '../redux/store';
 import { colors } from '../utils/colors';
+import { dynamicTableEnum } from '../utils/dummyJson';
+import { vh } from '../utils/units';
 const { width } = Dimensions.get('window');
 
 interface Employee {
@@ -52,6 +54,7 @@ const DataItem: React.FC<{
 );
 
 const Dashboard: React.FC<TabScreenParams<'EmployeeScreen'>> = ({}) => {
+  const navigation = useNavigation<NavigationProp<AppNavigatorParamList>>();
   const allEmployees = useSelector((state: RootState) => state.auth?.employees);
   const [dataFetching, setDataFetching] = useState(true);
   const dispatch = useDispatch();
@@ -221,7 +224,11 @@ const Dashboard: React.FC<TabScreenParams<'EmployeeScreen'>> = ({}) => {
             <ActionButton
               icon="person-outline"
               label="Employee Details"
-              onPress={() => {}}
+              onPress={() => {
+                navigation.navigate('customerList', {
+                  screen: 'rosterDetailView',
+                });
+              }}
             />
             <ActionButton
               icon="briefcase-outline"

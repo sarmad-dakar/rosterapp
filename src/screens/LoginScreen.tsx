@@ -251,6 +251,7 @@ export default function LoginScreen({ navigation, route }) {
                           placeholderTextColor="#9CA3AF"
                           secureTextEntry={!showPassword}
                           autoCapitalize="none"
+                          onSubmitEditing={handleLoginPress}
                         />
                         <TouchableOpacity
                           style={styles.eyeButton}

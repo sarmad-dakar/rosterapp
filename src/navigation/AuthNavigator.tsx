@@ -1,16 +1,34 @@
 // app/navigation/AuthNavigator.tsx
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import RoasterTabs from './Tabs/RosterTabs';
-import ModernLoginScreen from '../screens/CompanyURL';
-import LoginScreen from '../screens/LoginScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import RosterTransactionView from '../screens/RosterTransactionView';
+import ModernLoginScreen from '../screens/CompanyURL';
+import EmployeeList from '../screens/EmployeeList';
+import LoginScreen from '../screens/LoginScreen';
 import RosterDetailViewV2 from '../screens/RoasterDetailViewV2';
-// import RegisterScreen from '../screens/auth/RegisterScreen';
+import RosterTransactionView from '../screens/RosterTransactionView';
+import RoasterTabs from './Tabs/RosterTabs';
+import { RootState } from '../redux/store';
 
-const Stack = createNativeStackNavigator();
+export type AppNavigatorParamList = {
+  AuthStack: undefined;
+  Home: undefined;
+  rosterTransactionView: { title: string; transactionId: string };
+  rosterDetailView: { rosterId: string };
+  customerList: {
+    screen: keyof AppNavigatorParamList;
+  };
+  CompanyUrl: undefined;
+  loginScreen: undefined;
+};
+
+export type AppNavigatorScreenParams<T extends keyof AppNavigatorParamList> =
+  NativeStackNavigationProp<AppNavigatorParamList, T>;
+
+const Stack = createNativeStackNavigator<AppNavigatorParamList>();
 
 const AuthStackNavigator = () => {
   return (
@@ -22,7 +40,7 @@ const AuthStackNavigator = () => {
 };
 
 export default function AuthNavigator() {
-  const token = useSelector(state => state.auth?.token);
+  const token = useSelector((state: RootState) => state.auth?.token);
 
   return (
     <NavigationContainer>
@@ -44,6 +62,15 @@ export default function AuthNavigator() {
             <Stack.Screen
               name="rosterDetailView"
               component={RosterDetailViewV2}
+              options={{
+                headerShown: true,
+                headerTitle: '',
+                headerBackTitle: '',
+              }}
+            />
+            <Stack.Screen
+              name="customerList"
+              component={EmployeeList}
               options={{
                 headerShown: true,
                 headerTitle: '',

@@ -1,19 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
-  ActivityIndicator,
-  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { verifyDomain } from '../api/auth';
@@ -26,7 +26,6 @@ export default function ModernLoginScreen({ navigation }) {
   const [domain, setDomain] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const emailScale = useRef(new Animated.Value(1)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
@@ -159,6 +158,7 @@ export default function ModernLoginScreen({ navigation }) {
                           placeholder="Enter your domain"
                           placeholderTextColor="#9CA3AF"
                           autoCapitalize="none"
+                          onSubmitEditing={handleLoginPress}
                         />
                       </Animated.View>
                     </View>

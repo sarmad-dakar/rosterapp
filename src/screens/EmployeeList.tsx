@@ -1,25 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  FlatList,
+  Keyboard,
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
   TextInput,
-  FlatList,
   TouchableOpacity,
-  StatusBar,
+  View,
 } from 'react-native';
-import { getDynamicTableData } from '../api/rosterSchedule';
-import { dynamicTableEnum } from '../utils/dummyJson';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
-import { vh } from '../utils/units';
-// Import from react-native-vector-icons
-// Make sure to install: npm install react-native-vector-icons
-// import Icon from 'react-native-vector-icons/Feather';
+
+const IS_IOS_18_PLUS =
+  Platform.OS === 'ios' && parseInt(Platform.Version, 10) > 18;
 
 const EmployeeList = ({ navigation }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [employees, setEmployeeData] = useState([]);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const searchInputRef = useRef(null);
+  const searchAnimation = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+
   const employeData = useSelector(state => state?.auth?.employees);
+
   const filteredEmployees = employeData.filter(emp => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -30,13 +37,70 @@ const EmployeeList = ({ navigation }) => {
     );
   });
 
+  useEffect(() => {
+    // Set header title
+    navigation.setOptions({
+      headerTitle: 'Employees',
+      headerRight: () =>
+        !IS_IOS_18_PLUS && !searchVisible ? (
+          <TouchableOpacity
+            style={styles.headerSearchButton}
+            onPress={handleSearchPress}
+          >
+            <Text style={styles.headerSearchIcon}>🔍</Text>
+          </TouchableOpacity>
+        ) : null,
+    });
+  }, [navigation, searchVisible]);
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      e => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0),
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
+
+  const handleSearchPress = () => {
+    if (!IS_IOS_18_PLUS) {
+      setSearchVisible(true);
+      Animated.timing(searchAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+  };
+
+  const handleSearchClose = () => {
+    if (!IS_IOS_18_PLUS) {
+      Keyboard.dismiss();
+      setSearchTerm('');
+      Animated.timing(searchAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        setSearchVisible(false);
+      });
+    }
+  };
+
   const handleEdit = (code: string) => {
-    console.log(`Edit employee: ${code}`);
     navigation.navigate('rosterTransactionView', {
       employeeCode: code,
       title: 'Employee Career',
     });
-    // Add your edit navigation logic here
   };
 
   const getInitials = (name: string, surName: string) => {
@@ -46,10 +110,22 @@ const EmployeeList = ({ navigation }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
+      year: 'numeric',
     });
+  };
+
+  const getAvatarColor = (index: number) => {
+    const colors = [
+      '#3b82f6',
+      '#8b5cf6',
+      '#ec4899',
+      '#f59e0b',
+      '#10b981',
+      '#06b6d4',
+    ];
+    return colors[index % colors.length];
   };
 
   const renderEmployeeCard = ({
@@ -61,87 +137,150 @@ const EmployeeList = ({ navigation }) => {
   }) => (
     <TouchableOpacity
       style={styles.card}
-      activeOpacity={0.7}
+      activeOpacity={0.6}
       onPress={() => handleEdit(item.code)}
     >
-      <View style={styles.cardContent}>
-        <View style={[styles.avatar, { backgroundColor: '#3b82f6' }]}>
+      <View style={styles.cardHeader}>
+        <View
+          style={[styles.avatar, { backgroundColor: getAvatarColor(index) }]}
+        >
           <Text style={styles.avatarText}>
             {getInitials(item.name, item.surName)}
           </Text>
         </View>
 
-        <View style={styles.infoContainer}>
-          <View style={styles.headerRow}>
-            <Text style={styles.employeeName}>
-              {item.name} {item.surName}
-            </Text>
-            <View
-              style={[
-                styles.statusDot,
-                item.current === 'Yes' ? styles.activeDot : styles.inactiveDot,
-              ]}
-            />
-          </View>
-
-          <View style={styles.detailsRowDouble}>
-            <View style={[styles.detailsRowHalf]}>
-              <Text style={styles.detailLabel}>Code: </Text>
-              <Text style={styles.detailValue}>{item.code}</Text>
-            </View>
-            <View style={[styles.detailsRowHalf, { justifyContent: 'center' }]}>
-              <Text style={styles.detailLabel}>ID: </Text>
-              {/*  */}
-              <Text style={styles.detailValue}>{item.idCard}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.detailsFullText}>
-            <Text style={[styles.detailLabel]}>DOB: </Text>
-            <Text style={styles.detailValue}>
-              {formatDate(item.dateOfBirth)} || Age :{item.age}
-            </Text>
+        <View style={styles.headerInfo}>
+          <Text style={styles.employeeName} numberOfLines={1}>
+            {item.name} {item.surName}
           </Text>
+          <Text style={styles.employeeCode}>#{item.code}</Text>
         </View>
 
-        {/* <View style={styles.editIconContainer}>
-          <Text style={styles.editIcon}>✏️</Text>
-        </View> */}
+        <View
+          style={[
+            styles.statusBadge,
+            item.current === 'Yes' ? styles.activeBadge : styles.inactiveBadge,
+          ]}
+        >
+          <View
+            style={[
+              styles.statusDot,
+              item.current === 'Yes' ? styles.activeDot : styles.inactiveDot,
+            ]}
+          />
+          <Text
+            style={[
+              styles.statusText,
+              item.current === 'Yes' ? styles.activeText : styles.inactiveText,
+            ]}
+          >
+            {item.current === 'Yes' ? 'Active' : 'Inactive'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.cardBody}>
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>ID Card</Text>
+            <Text style={styles.infoValue}>{item.idCard}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Age</Text>
+            <Text style={styles.infoValue}>{item.age} years</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRowSingle}>
+          <Text style={styles.infoLabel}>Date of Birth</Text>
+          <Text style={styles.infoValue}>{formatDate(item.dateOfBirth)}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputWrapper}>
-          {/* Replace with: <Icon name="search" size={18} color="#94a3b8" /> */}
-          <Text style={styles.searchIconText}>🔍</Text>
+  const renderHeader = () =>
+    !IS_IOS_18_PLUS && searchVisible ? (
+      <View style={styles.headerSearchContainer}>
+        <View style={styles.searchWrapper}>
+          <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
+            ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Search People..."
+            placeholder="Search by name, code or ID..."
             value={searchTerm}
             onChangeText={setSearchTerm}
             placeholderTextColor="#94a3b8"
+            returnKeyType="search"
           />
+          <TouchableOpacity onPress={handleSearchClose}>
+            <Text style={styles.clearIcon}>✕</Text>
+          </TouchableOpacity>
         </View>
       </View>
+    ) : null;
+
+  const renderBottomSearch = () => (
+    <Animated.View
+      style={[
+        styles.bottomSearchContainer,
+        {
+          paddingBottom: keyboardHeight > 0 ? 12 : Math.max(insets.bottom, 12),
+          bottom: keyboardHeight,
+        },
+      ]}
+    >
+      <View style={styles.bottomSearchWrapper}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search"
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          placeholderTextColor="#94a3b8"
+          returnKeyType="search"
+        />
+        {searchTerm.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchTerm('')}>
+            <Text style={styles.clearIcon}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </Animated.View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+
+      {renderHeader()}
 
       {filteredEmployees.length > 0 ? (
         <FlatList
           data={filteredEmployees}
           renderItem={renderEmployeeCard}
           keyExtractor={item => item.code}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            IS_IOS_18_PLUS && { paddingBottom: 120 + insets.bottom },
+          ]}
           showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
         />
       ) : (
         <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>👥</Text>
+          <Text style={styles.emptyTitle}>No employees found</Text>
           <Text style={styles.emptyText}>
-            No employees found matching your search.
+            Try adjusting your search criteria
           </Text>
         </View>
       )}
+
+      {IS_IOS_18_PLUS && renderBottomSearch()}
     </View>
   );
 };
@@ -151,138 +290,211 @@ export default EmployeeList;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
   },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+  header: {
     backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
-  searchInputWrapper: {
+  headerSearchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  headerSearchIcon: {
+    fontSize: 18,
+  },
+  headerSearchContainer: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: vh * 7,
-    // paddingTop: vh * 10,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
   },
-  searchIconText: {
-    fontSize: 16,
-    marginRight: 8,
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    color: '#1e293b',
+    fontSize: 16,
+    color: '#0f172a',
     padding: 0,
   },
+  clearIcon: {
+    fontSize: 18,
+    color: '#94a3b8',
+    paddingHorizontal: 8,
+  },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 32,
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
   },
-  cardContent: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
-  infoContainer: {
+  headerInfo: {
     flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    marginRight: 12,
   },
   employeeName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1e293b',
-    flex: 1,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  activeDot: {
-    backgroundColor: '#10b981',
-  },
-  inactiveDot: {
-    backgroundColor: '#ef4444',
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  detailsRowDouble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
+    color: '#0f172a',
     marginBottom: 2,
   },
-  detailsRowHalf: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  detailsFullText: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  detailSeparator: {
-    color: '#cbd5e1',
-    fontSize: 13,
-  },
-  detailLabel: {
-    fontSize: 13,
+  employeeCode: {
+    fontSize: 14,
     color: '#64748b',
     fontWeight: '500',
   },
-  detailValue: {
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  activeBadge: {
+    backgroundColor: '#dcfce7',
+  },
+  inactiveBadge: {
+    backgroundColor: '#fee2e2',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  activeDot: {
+    backgroundColor: '#16a34a',
+  },
+  inactiveDot: {
+    backgroundColor: '#dc2626',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  activeText: {
+    color: '#16a34a',
+  },
+  inactiveText: {
+    color: '#dc2626',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginHorizontal: 16,
+  },
+  cardBody: {
+    padding: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    gap: 16,
+  },
+  infoItem: {
+    flex: 1,
+  },
+  infoRowSingle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
     fontSize: 13,
-    color: '#475569',
+    color: '#64748b',
+    fontWeight: '500',
+    marginBottom: 4,
   },
-  editIconContainer: {
-    paddingLeft: 12,
-    justifyContent: 'center',
+  infoValue: {
+    fontSize: 15,
+    color: '#0f172a',
+    fontWeight: '600',
   },
-  editIcon: {
-    fontSize: 18,
+  bottomSearchContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(249, 250, 251, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderTopWidth: 0.5,
+    borderTopColor: '#e2e8f0',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+  },
+  bottomSearchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+    opacity: 0.3,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#0f172a',
+    marginBottom: 8,
   },
   emptyText: {
     fontSize: 15,
