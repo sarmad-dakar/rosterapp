@@ -224,16 +224,16 @@ const Dashboard: React.FC<TabScreenParams<'EmployeeScreen'>> = ({}) => {
             <ActionButton
               icon="person-outline"
               label="Employee Details"
+              onPress={() => {}}
+            />
+            <ActionButton
+              icon="briefcase-outline"
+              label="Employee Career"
               onPress={() => {
                 navigation.navigate('customerList', {
                   screen: 'rosterDetailView',
                 });
               }}
-            />
-            <ActionButton
-              icon="briefcase-outline"
-              label="Employee Career"
-              onPress={() => {}}
             />
             <ActionButton
               icon="calendar-outline"
