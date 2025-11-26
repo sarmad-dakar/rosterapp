@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDynamicForm, getDynamicTableData } from '../../api/rosterSchedule';
 import { dynamicTableEnum } from '../../utils/dummyJson';
 import { useSelector } from 'react-redux';
+import moment from 'moment';
 
 interface FormProcessorProps {
   dynamicFormData: any;
@@ -84,6 +85,8 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
             ...field,
             onClickFuncName: matchingModal.onClickFuncName,
             isMultiSelect: matchingModal.isMultiSelect,
+            isPost: matchingModal.isPost,
+            jsonDataKeyName: matchingModal.jsonDataKeyName,
           };
         }
 
@@ -256,23 +259,46 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       formData.employeeCode = employeeCode;
     }
 
+    // Helper function to process field value
+    const processFieldValue = (field: any) => {
+      let value = field.defaultValue;
+
+      // Handle different field types
+      if (field.fieldType === 'modal' || field.fieldType === 'selectdropdown') {
+        // Extract code from object, or return empty string if null/undefined
+        value = field.defaultValue?.code || '';
+      } else if (field.fieldType === 'checkbox') {
+        value = field.defaultValue || false;
+      } else if (field.fieldType === 'datepickersingle') {
+        // Format date according to postDateFormat
+        if (field.defaultValue) {
+          const dateFormat = field.postDateFormat || 'DD-MM-YYYY';
+          value = moment(field.defaultValue).format(dateFormat);
+        } else {
+          value = '';
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        // If value is still an object (not already handled), extract code
+        value = value.code || '';
+      } else {
+        // For regular text fields, use value as is or empty string
+        value = value || '';
+      }
+
+      return value;
+    };
+
+    // Collect header form data
+    headerForm.forEach(field => {
+      if (field.isPost && field.jsonDataKeyName) {
+        formData[field.jsonDataKeyName] = processFieldValue(field);
+      }
+    });
+
     // Collect general form data
     generalForm.forEach(field => {
       if (field.isPost && field.jsonDataKeyName) {
-        let value = field.defaultValue;
-
-        if (
-          field.fieldType === 'modal' ||
-          field.fieldType === 'selectdropdown'
-        ) {
-          value = field.defaultValue?.code || '';
-        } else if (field.fieldType === 'checkbox') {
-          value = field.defaultValue || false;
-        } else if (field.fieldType === 'datepickersingle') {
-          value = field.defaultValue || '';
-        }
-
-        formData[field.jsonDataKeyName] = value;
+        formData[field.jsonDataKeyName] = processFieldValue(field);
       }
     });
 
@@ -280,20 +306,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     tabForm.forEach(tab => {
       tab.forEach(field => {
         if (field.isPost && field.jsonDataKeyName) {
-          let value = field.defaultValue;
-
-          if (
-            field.fieldType === 'modal' ||
-            field.fieldType === 'selectdropdown'
-          ) {
-            value = field.defaultValue?.code || '';
-          } else if (field.fieldType === 'checkbox') {
-            value = field.defaultValue || false;
-          } else if (field.fieldType === 'datepickersingle') {
-            value = field.defaultValue || '';
-          }
-
-          formData[field.jsonDataKeyName] = value;
+          formData[field.jsonDataKeyName] = processFieldValue(field);
         }
       });
     });
@@ -322,6 +335,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
   const handleSaveChanges = async () => {
     try {
       setIsSaving(true);
+      console.log(tabForm, 'tabForm');
       const formData = collectFormData();
       console.log('Submitting form data:', formData);
       await handleSubmit(formData);
