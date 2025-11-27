@@ -48,6 +48,9 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const insets = useSafeAreaInsets();
   const allEmployees = useSelector((state: any) => state.auth?.employees);
 
@@ -238,6 +241,13 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       fieldObject.defaultValue = value;
     }
     setGeneralForm(updatedGeneralForm);
+
+    // Clear validation error for this field when user changes the value
+    if (validationErrors[currentField.jquerySelectorID]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[currentField.jquerySelectorID];
+      setValidationErrors(newErrors);
+    }
   };
 
   const handleTabFormChange = (currentField, value, pageIndex) => {
@@ -250,6 +260,13 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
       fieldObject.defaultValue = value;
     }
     setTabForm(updatedTabForm);
+
+    // Clear validation error for this field when user changes the value
+    if (validationErrors[currentField.jquerySelectorID]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[currentField.jquerySelectorID];
+      setValidationErrors(newErrors);
+    }
   };
 
   const collectFormData = () => {
@@ -314,6 +331,100 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
     return formData;
   };
 
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+
+    // Helper function to check if field value is empty
+    const isFieldEmpty = (field: any) => {
+      const value = field.defaultValue;
+
+      if (value === null || value === undefined || value === '') {
+        return true;
+      }
+
+      // For modal/dropdown fields, check if object has a code
+      if (field.fieldType === 'modal' || field.fieldType === 'selectdropdown') {
+        return !value || !value.code;
+      }
+
+      return false;
+    };
+
+    // Helper function to get field value as string for validation
+    const getFieldValueAsString = (field: any) => {
+      const value = field.defaultValue;
+
+      if (field.fieldType === 'modal' || field.fieldType === 'selectdropdown') {
+        return value?.code || '';
+      }
+
+      return String(value || '');
+    };
+
+    // Helper function to validate regex pattern
+    const validateRegexPattern = (field: any) => {
+      if (!field.customRegexPattern || field.customRegexPattern === '') {
+        return true; // No pattern to validate
+      }
+
+      const fieldValue = getFieldValueAsString(field);
+
+      // Don't validate pattern if field is empty (required validation handles that)
+      if (!fieldValue) {
+        return true;
+      }
+
+      try {
+        const regex = new RegExp(field.customRegexPattern);
+        return regex.test(fieldValue);
+      } catch (error) {
+        console.error(
+          'Invalid regex pattern:',
+          field.customRegexPattern,
+          error,
+        );
+        return true; // If regex is invalid, skip validation
+      }
+    };
+
+    // Validate a single field
+    const validateField = (field: any) => {
+      // Check if required field is empty
+      if (field.isRequired && isFieldEmpty(field)) {
+        errors[field.jquerySelectorID] =
+          field.validationMessage || 'This field is required';
+        return;
+      }
+
+      // Check regex pattern if field has value
+      if (!isFieldEmpty(field) && !validateRegexPattern(field)) {
+        errors[field.jquerySelectorID] =
+          field.validationMessage || 'Invalid format';
+        return;
+      }
+    };
+
+    // Validate header form fields
+    headerForm.forEach(field => {
+      validateField(field);
+    });
+
+    // Validate general form fields
+    generalForm.forEach(field => {
+      validateField(field);
+    });
+
+    // Validate tab form fields
+    tabForm.forEach(tab => {
+      tab.forEach(field => {
+        validateField(field);
+      });
+    });
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const showSuccessAnimation = () => {
     setSaveSuccess(true);
     Animated.sequence([
@@ -334,6 +445,16 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
 
   const handleSaveChanges = async () => {
     try {
+      // Validate form before submitting
+      const isValid = validateForm();
+
+      if (!isValid) {
+        console.log(
+          'Form validation failed. Please fill in all required fields.',
+        );
+        return;
+      }
+
       setIsSaving(true);
       console.log(tabForm, 'tabForm');
       const formData = collectFormData();
@@ -418,6 +539,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
 
   const renderField = (field, fieldIndex, pageIndex, isGeneral = false) => {
     const fieldWidth = getFieldWidth(field.layoutClass);
+    const fieldError = validationErrors[field.jquerySelectorID];
 
     if (field.fieldType === 'emptydiv') {
       return <View key={fieldIndex} style={{ width: fieldWidth }} />;
@@ -433,6 +555,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
           dropdownData={field.fieldData}
           value={field.defaultValue?.description}
           dropdown={true}
+          error={fieldError}
           onPress={
             field.apiUrl
               ? () => handleDropdownPress(field, pageIndex, isGeneral)
@@ -457,6 +580,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
           value={field.defaultValue?.description}
           ismodal={true}
           dropdown={false}
+          error={fieldError}
           onPress={() => {
             // Allow press if field has data OR has apiUrl (to load data)
             if (field.fieldData?.length > 0 || field.apiUrl) {
@@ -509,6 +633,7 @@ const FormProcessor: React.FC<FormProcessorProps> = ({
         value={field?.defaultValue}
         inputStyle={{ width: fieldWidth }}
         editable={!field.isReadOnly}
+        error={fieldError}
         onChangeText={value =>
           isGeneral
             ? handleGeneralFormChange(field, value)

@@ -256,21 +256,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionsSection: {
-    paddingHorizontal: 20,
-    marginTop: 16,
+    marginTop: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#1A1A1A',
   },
-  sectionContent: {},
+  sectionContent: {
+    paddingHorizontal: 20,
+  },
   actionButtonsRow: {
     flexDirection: 'row',
     gap: 12,
@@ -282,5 +297,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 16,
+    paddingTop: 16,
   },
 });

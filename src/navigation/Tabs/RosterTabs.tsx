@@ -47,7 +47,11 @@ const RosterStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* Add other screens here if needed */}
       <Stack.Screen name="RosterScreen" component={RosterScreen} />
-      <Stack.Screen name="RosterView" component={RosterView} />
+      <Stack.Screen
+        options={{ headerShown: true }}
+        name="RosterView"
+        component={RosterView}
+      />
     </Stack.Navigator>
   );
 };

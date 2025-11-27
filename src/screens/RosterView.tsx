@@ -132,7 +132,7 @@ export default function RosterView({ navigation }) {
     <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Modern Header with Gradient */}
-        <View style={styles.headerContainer}>
+        {/* <View style={styles.headerContainer}>
           <View style={styles.headerGradient}>
             <LinearGradient
               colors={['#0d4483', '#1a5da8', '#2563eb']}
@@ -155,7 +155,7 @@ export default function RosterView({ navigation }) {
               </Text>
             </Animated.View>
           </View>
-        </View>
+        </View> */}
 
         <Animated.ScrollView
           style={[styles.scrollView, { opacity: fadeAnim }]}
