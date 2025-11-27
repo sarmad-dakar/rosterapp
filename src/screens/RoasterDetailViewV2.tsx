@@ -2,6 +2,7 @@ import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -15,6 +16,7 @@ import { getRosterSchedules } from '../api/rosterSchedule';
 import EmployeeInfoPopup from '../components/popups/employeeinfoPopup';
 import { colors } from '../utils/colors';
 import { vh } from '../utils/units';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 // const weekDays = [
 //   { day: 'Mon', date: 21, month: 'Jul' },
@@ -326,6 +328,10 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loadingState, setLoadingState] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [lockedShifts, setLockedShifts] = useState<{ [key: string]: boolean }>(
+    {},
+  );
   useEffect(() => {
     sortJson(employeeData, rosterDate);
   }, [employeeData]);
@@ -354,7 +360,10 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
         <TouchableOpacity style={styles.circleBtn}>
           <Icon name="picture-as-pdf" size={15} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.circleBtn}>
+        <TouchableOpacity
+          style={[styles.circleBtn, isEditMode && styles.circleBtnActive]}
+          onPress={() => setIsEditMode(!isEditMode)}
+        >
           <Icon name="edit" size={15} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -485,6 +494,105 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
     employeeInfoRef.current?.show(employee);
   };
 
+  const handleAddShift = (employeeName, dayKey) => {
+    console.log('Add shift for:', employeeName, 'on', dayKey);
+
+    if (!scheduleTesting) return;
+
+    // Check if any shift is locked for this employee/day
+    const dayEmployees = scheduleTesting[dayKey];
+    const employeeGroup = dayEmployees?.find(
+      group => group.employee?.name === employeeName,
+    );
+
+    if (employeeGroup) {
+      // Check if any shift is locked
+      const hasLockedShift = employeeGroup.shifts.some((shift, index) => {
+        const shiftKey = `${dayKey}-${employeeName}-${index}`;
+        return lockedShifts[shiftKey];
+      });
+
+      if (hasLockedShift) {
+        Alert.alert(
+          'Shift Locked',
+          'Cannot add a new shift when existing shifts are locked. Please unlock all shifts first.',
+          [{ text: 'OK', style: 'default' }],
+        );
+        return;
+      }
+    }
+
+    // Create a copy of the schedule
+    const updatedSchedule = { ...scheduleTesting };
+
+    // Find the employee group for this day
+    const updatedDayEmployees = updatedSchedule[dayKey];
+    const employeeGroupIndex = updatedDayEmployees?.findIndex(
+      group => group.employee?.name === employeeName,
+    );
+
+    if (employeeGroupIndex !== -1) {
+      const updatedEmployeeGroup = updatedDayEmployees[employeeGroupIndex];
+
+      // Get the first shift as a template or create a default one
+      const templateShift = updatedEmployeeGroup.shifts[0] || {
+        shiftCode: null,
+        shiftDesc: 'Day',
+        shiftTimeFrom: '00:00:00',
+        shiftTimeTo: '00:00:00',
+        shiftBreak: '00:15',
+        color: calendarColors.green,
+      };
+
+      // Create a new shift with default "00:00" times
+      const newShift = {
+        ...templateShift,
+        shiftTimeFrom: '00:00:00',
+        shiftTimeTo: '00:00:00',
+      };
+
+      // Add the new shift to the shifts array
+      updatedEmployeeGroup.shifts.push(newShift);
+
+      // Update the state
+      setScheduleTesting(updatedSchedule);
+
+      // Automatically expand the group to show the newly added shift
+      const groupKey = `${dayKey}-${employeeName}`;
+      setExpandedGroups(prev => ({
+        ...prev,
+        [groupKey]: true,
+      }));
+
+      console.log('New shift added:', newShift);
+    }
+  };
+
+  const handleEditShift = (employeeName, dayKey, shift) => {
+    console.log('Edit shift for:', employeeName, 'on', dayKey, shift);
+    // Implement edit shift logic here
+  };
+
+  const handleLockShift = (employeeName, dayKey, shiftIndex) => {
+    const shiftKey = `${dayKey}-${employeeName}-${shiftIndex}`;
+
+    setLockedShifts(prev => ({
+      ...prev,
+      [shiftKey]: !prev[shiftKey], // Toggle lock state
+    }));
+
+    console.log(
+      'Toggled lock for:',
+      employeeName,
+      'on',
+      dayKey,
+      'shift:',
+      shiftIndex,
+      'Locked:',
+      !lockedShifts[shiftKey],
+    );
+  };
+
   const toggleGroupExpansion = (dayKey, employeeName) => {
     const groupKey = `${dayKey}-${employeeName}`;
     console.log(groupKey, 'groupKeys');
@@ -565,81 +673,102 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
     onToggleExpand = null,
     employeeName = '',
     attributes,
-  ) => (
-    <View
-      activeOpacity={0.5}
-      key={index}
-      style={[
-        styles.shiftBlock,
-        { backgroundColor: attributes?.backColor || calendarColors.green },
-        isFirstShift && hasMultipleShifts && styles.firstShiftWithMultiple,
-      ]}
-    >
-      {!shift?.shiftCode ? (
-        <Text style={{ fontSize: 10 }}>-No Shift-</Text>
-      ) : (
-        <View style={styles.shiftContent}>
-          <View style={styles.shiftInfo}>
-            <Text
-              style={[
-                styles.shiftTime,
-                { color: attributes?.foreColor || '#000' },
-              ]}
-            >
-              {shift?.shiftCode || `\nN/A`}
-            </Text>
+    dayKey = '',
+    shiftIndex = 0,
+  ) => {
+    const shiftKey = `${dayKey}-${employeeName}-${shiftIndex}`;
+    const isLocked = lockedShifts[shiftKey] || false;
 
-            <Text
-              style={[
-                styles.shiftTime,
-                { color: attributes?.foreColor || '#000' },
-              ]}
-            >
-              <Text style={{ color: 'black' }}>IN :</Text>{' '}
-              {shift.shiftTimeFrom || `\nN/A`}
-            </Text>
+    return (
+      <View
+        activeOpacity={0.5}
+        key={index}
+        style={[
+          styles.shiftBlock,
+          { backgroundColor: attributes?.backColor || calendarColors.green },
+          isFirstShift && hasMultipleShifts && styles.firstShiftWithMultiple,
+        ]}
+      >
+        {!shift?.shiftCode ? (
+          <Text style={{ fontSize: 10 }}>-No Shift-</Text>
+        ) : (
+          <View style={styles.shiftContent}>
+            <View style={styles.shiftInfo}>
+              <Text
+                style={[
+                  styles.shiftTime,
+                  { color: attributes?.foreColor || '#000' },
+                ]}
+              >
+                {shift?.shiftCode || `\nN/A`}
+              </Text>
 
-            <Text
-              style={[
-                styles.shiftTime,
-                { color: attributes?.foreColor || '#000' },
-              ]}
-            >
-              <Text style={{ color: 'black' }}>OUT :</Text>{' '}
-              {shift.shiftTimeTo || `\nN/A`}
-            </Text>
-            <Text
-              style={[
-                styles.shiftTime,
-                { color: attributes?.foreColor || '#000' },
-              ]}
-            >
-              <Text style={{ color: 'black' }}>BREAK :</Text>{' '}
-              {shift.shiftBreak || `\nN/A`}
-            </Text>
+              <Text
+                style={[
+                  styles.shiftTime,
+                  { color: attributes?.foreColor || '#000' },
+                ]}
+              >
+                <Text style={{ color: 'black' }}>IN :</Text>{' '}
+                {shift.shiftTimeFrom || `\nN/A`}
+              </Text>
+
+              <Text
+                style={[
+                  styles.shiftTime,
+                  { color: attributes?.foreColor || '#000' },
+                ]}
+              >
+                <Text style={{ color: 'black' }}>OUT :</Text>{' '}
+                {shift.shiftTimeTo || `\nN/A`}
+              </Text>
+              <Text
+                style={[
+                  styles.shiftTime,
+                  { color: attributes?.foreColor || '#000' },
+                ]}
+              >
+                <Text style={{ color: 'black' }}>BREAK :</Text>{' '}
+                {shift.shiftBreak || `\nN/A`}
+              </Text>
+            </View>
+
+            {/* Lock Button - Shows in Edit Mode */}
+
+            {isFirstShift && hasMultipleShifts && (
+              <TouchableOpacity
+                style={[styles.expandButton]}
+                onPress={e => {
+                  console.log('hellow ');
+                  e.stopPropagation();
+                  onToggleExpand();
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon
+                  name={isExpanded ? 'expand-less' : 'expand-more'}
+                  size={16}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            )}
           </View>
-
-          {isFirstShift && hasMultipleShifts && (
-            <TouchableOpacity
-              style={[styles.expandButton]}
-              onPress={e => {
-                console.log('hellow ');
-                e.stopPropagation();
-                onToggleExpand();
-              }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Icon
-                name={isExpanded ? 'expand-less' : 'expand-more'}
-                size={16}
-                color="#666"
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-    </View>
-  );
+        )}
+        {isEditMode && shiftIndex === 0 && (
+          <TouchableOpacity
+            style={[styles.lockButton, isLocked && styles.lockButtonActive]}
+            onPress={() => handleLockShift(employeeName, dayKey, shiftIndex)}
+          >
+            <FontAwesome
+              name={isLocked ? 'lock' : 'unlock'}
+              size={14}
+              color={isLocked ? '#ef4444' : '#0005'}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   const shouldShowNewBlock = (multipleShifts, isExpanded) => {
     if (multipleShifts && isExpanded) {
@@ -674,6 +803,28 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
             {employeeName?.name}
           </Text>
         </TouchableOpacity>
+
+        {/* Edit Mode Action Buttons */}
+        {isEditMode && (
+          <View style={styles.editActionsContainer}>
+            <TouchableOpacity
+              style={styles.editActionBtn}
+              onPress={() => handleAddShift(employeeName?.name, dayKey)}
+            >
+              <Icon name="add" size={16} color="#10b981" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.editActionBtn}
+              onPress={() =>
+                handleEditShift(employeeName?.name, dayKey, shifts[0])
+              }
+            >
+              <Icon name="edit" size={16} color="#3b82f6" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {shiftsToShow.map((shift, shiftIndex) =>
           renderShiftBlock(
             shift,
@@ -684,25 +835,27 @@ const RosterDetailViewV2 = ({ navigation, route }) => {
             () => toggleGroupExpansion(dayKey, employeeName?.name),
             employeeName?.name,
             attributes,
+            dayKey,
+            0, // First shift index
           ),
         )}
 
         {shouldShowNewBlock(hasMultipleShifts, isExpanded) && (
           <View style={styles.additionalShifts}>
-            {shifts
-              .slice(1)
-              .map((shift, shiftIndex) =>
-                renderShiftBlock(
-                  shift,
-                  `${groupIndex}-additional-${shiftIndex}`,
-                  false,
-                  false,
-                  false,
-                  null,
-                  employeeName?.name,
-                  attributes,
-                ),
-              )}
+            {shifts.slice(1).map((shift, shiftIndex) =>
+              renderShiftBlock(
+                shift,
+                `${groupIndex}-additional-${shiftIndex}`,
+                false,
+                false,
+                false,
+                null,
+                employeeName?.name,
+                attributes,
+                dayKey,
+                shiftIndex + 1, // Actual shift index (starting from 1 for additional shifts)
+              ),
+            )}
           </View>
         )}
       </View>
@@ -1004,6 +1157,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  circleBtnActive: {
+    backgroundColor: '#10b981',
+  },
+  editActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 5,
+    backgroundColor: '#003860',
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  editActionBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockButtonActive: {
+    backgroundColor: 'rgb(255, 255, 255)',
   },
   weekNavigationContainer: {
     flexDirection: 'row',

@@ -141,14 +141,8 @@ const InputDropdown: FC<Props> = props => {
     }
   };
 
-  const handleDropdownPress = async () => {
+  const handleDropdownPress = () => {
     console.log(props.dropdownData, 'Dropdown pressed');
-    
-    // Call onPress if provided (for API data loading)
-    if (props.onPress) {
-      await props.onPress();
-    }
-    
     if (props.dropdownData) {
       setDropdownVisible(true);
     }
